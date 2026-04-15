@@ -1,0 +1,157 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string", "enum": ["buyer", "vendor", "admin"] },
+        "subscription": {
+          "type": "object",
+          "properties": {
+            "planId": { "type": "string" },
+            "active": { "type": "boolean" },
+            "expiryDate": { "type": "string", "format": "date-time" },
+            "listingCount": { "type": "number" }
+          }
+        }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Business": {
+      "title": "Business",
+      "description": "Business listing for sale",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["Micro Business", "Partnership Sale", "Full Business", "Investment"] },
+        "price": { "type": "number" },
+        "location": { "type": "string" },
+        "description": { "type": "string" },
+        "revenue": { "type": "number" },
+        "profit": { "type": "number" },
+        "yearsOfOperation": { "type": "number" },
+        "documents": { "type": "array", "items": { "type": "string" } },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["under_review", "approved", "rejected"] },
+        "isFeatured": { "type": "boolean" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "price", "location", "description", "status", "ownerId"]
+    },
+    "Enquiry": {
+      "title": "Enquiry",
+      "description": "Enquiry sent by a buyer to a vendor",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "businessId": { "type": "string" },
+        "vendorId": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "businessId", "vendorId", "message"]
+    },
+    "Plan": {
+      "title": "Plan",
+      "description": "Subscription plan details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "listingLimit": { "type": "number" },
+        "isFeatured": { "type": "boolean" }
+      },
+      "required": ["name", "price", "listingLimit"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Payment records for subscriptions",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "planId": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
+        "razorpayOrderId": { "type": "string" },
+        "razorpayPaymentId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "planId", "amount", "status", "createdAt"]
+    },
+    "Chat": {
+      "title": "Chat",
+      "description": "A conversation between a buyer and a vendor",
+      "type": "object",
+      "properties": {
+        "businessId": { "type": "string" },
+        "businessTitle": { "type": "string" },
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "lastMessage": { "type": "string" },
+        "lastMessageAt": { "type": "string", "format": "date-time" },
+        "unreadCount": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["businessId", "participants", "updatedAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "An individual message within a chat",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "status": { "type": "string", "enum": ["sent", "delivered", "seen"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "text", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/businesses/{businessId}": {
+      "schema": "Business",
+      "description": "Business listings"
+    },
+    "/enquiries/{enquiryId}": {
+      "schema": "Enquiry",
+      "description": "Buyer enquiries"
+    },
+    "/plans/{planId}": {
+      "schema": "Plan",
+      "description": "Available subscription plans"
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Payment records"
+    },
+    "/public_profiles/{userId}": {
+      "schema": {
+        "title": "PublicProfile",
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "role": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "description": "Publicly accessible vendor profiles"
+    },
+    "/chats/{chatId}": {
+      "schema": "Chat",
+      "description": "Conversations between users"
+    },
+    "/chats/{chatId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Individual messages in a chat"
+    }
+  }
+}
