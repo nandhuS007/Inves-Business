@@ -92,6 +92,7 @@ async function seedAdmin() {
 async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
+  console.log(`Starting server process... PORT detected: ${process.env.PORT || 'not set (defaulting to 3000)'}`);
 
   app.use(helmet({
     contentSecurityPolicy: false, // Disable for Vite dev server compatibility
