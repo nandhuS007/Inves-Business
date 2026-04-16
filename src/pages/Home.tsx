@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { collection, query, where, getDocsFromServer } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { db, auth } from "../lib/firebase";
 import { Navbar } from "../components/Navbar";
 import { BusinessCard } from "../components/BusinessCard";
@@ -26,7 +26,7 @@ export const Home = () => {
         collection(db, "businesses"),
         where("status", "==", "approved")
       );
-      const snapshot = await getDocsFromServer(q);
+      const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
   });
@@ -278,7 +278,13 @@ export const Home = () => {
           <div className="text-center py-20 bg-red-50 rounded-3xl border border-red-100">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-red-900 mb-2">Error loading listings</h3>
-            <p className="text-red-600">Please try refreshing the page.</p>
+            <p className="text-red-600 mb-4">{(error as any).message || "Please try refreshing the page."}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-red-600 text-white rounded-xl text-sm font-bold active:scale-95"
+            >
+              Retry
+            </button>
           </div>
         ) : filteredListings.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -301,9 +307,14 @@ export const Home = () => {
       <footer className="bg-white border-t border-gray-200 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="flex items-center gap-2">
-              <Briefcase className="h-6 w-6 text-[#002366]" />
-              <span className="text-lg font-bold text-[#002366]">Inves4Business</span>
+            <div className="flex flex-col items-center gap-1 group">
+              <div className="relative flex items-center justify-center">
+                <div className="bg-[#002366] p-2 rounded-xl shadow-lg flex items-center justify-center">
+                  <Search className="h-5 w-5 text-white stroke-[2.5]" />
+                </div>
+                <Briefcase className="h-2.5 w-2.5 text-white absolute -top-0.5 -right-0.5 bg-[#002366] rounded-full p-0.5" />
+              </div>
+              <span className="text-xl font-serif font-black text-[#002366] tracking-tight leading-none uppercase italic">Inves4Business</span>
             </div>
             <div className="flex gap-8 text-sm text-gray-500 font-medium">
               <Link to="/about" className="hover:text-[#002366] transition-colors">About Us</Link>

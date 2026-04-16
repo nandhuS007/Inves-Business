@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Briefcase, User, LogOut, Menu, X, MessageSquare } from "lucide-react";
+import { Briefcase, User, LogOut, Menu, X, MessageSquare, Search } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export const Navbar = () => {
@@ -19,12 +19,15 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="bg-brand-primary p-1.5 rounded-lg shadow-lg group-hover:scale-110 transition-transform">
-                <Briefcase className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-2xl font-serif font-bold text-brand-primary tracking-tight">Inves4Business</span>
-            </Link>
+        <Link to="/" className="flex flex-col items-center gap-1 group">
+          <div className="relative flex items-center justify-center">
+            <div className="bg-brand-primary p-2 rounded-xl shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center">
+              <Search className="h-6 w-6 text-white stroke-[2.5]" />
+            </div>
+            <Briefcase className="h-3 w-3 text-white absolute -top-1 -right-1 bg-brand-primary rounded-full p-0.5 border border-white" />
+          </div>
+          <span className="text-xl font-serif font-black text-brand-primary tracking-tight leading-none uppercase italic">Inves4Business</span>
+        </Link>
           </div>
 
           {/* Desktop Menu */}

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Briefcase, Mail, Lock, User, Phone, AlertCircle, ArrowRight, Shield, CheckCircle2 } from "lucide-react";
+import { Briefcase, Mail, Lock, User, Phone, AlertCircle, ArrowRight, Shield, CheckCircle2, Search, Fingerprint } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
+import { OTPVerification } from "../components/OTPVerification";
+import { GoogleLoginButton } from "../components/GoogleLoginButton";
 
 export const Register = () => {
   const [email, setEmail] = useState("");
@@ -13,6 +15,8 @@ export const Register = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState<"signup" | "verify">("signup");
+  const [registeredUid, setRegisteredUid] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -32,13 +36,33 @@ export const Register = () => {
         throw new Error(data.error || "Registration failed");
       }
       
-      setSuccess(true);
+      setRegisteredUid(data.uid);
+      setStep("verify");
     } catch (err: any) {
       setError(err.message || "Failed to create account");
     } finally {
       setLoading(false);
     }
   };
+
+  if (step === "verify") {
+    return (
+      <div className="min-h-screen bg-[#f8f9fa] flex flex-col justify-center py-20 px-4">
+        <div className="mb-10 flex flex-col items-center">
+          <Link to="/" className="flex flex-col items-center gap-3 mb-10 group transition-all">
+            <div className="relative flex items-center justify-center">
+              <div className="bg-brand-primary p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center">
+                <Search className="h-10 w-10 text-white stroke-[2.5]" />
+              </div>
+              <Briefcase className="h-4 w-4 text-white absolute -top-1 -right-1 bg-brand-primary rounded-full p-1 border border-white" />
+            </div>
+            <span className="text-4xl font-serif font-black text-brand-primary tracking-tight leading-none uppercase italic">Inves4Business</span>
+          </Link>
+        </div>
+        <OTPVerification uid={registeredUid} onSuccess={() => setSuccess(true)} />
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -74,11 +98,14 @@ export const Register = () => {
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col justify-center py-20 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to="/" className="flex justify-center items-center gap-3 mb-10 group transition-all">
-          <div className="bg-brand-primary p-2 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
-             <Briefcase className="h-8 w-8 text-white" />
+        <Link to="/" className="flex flex-col items-center gap-3 mb-10 group transition-all">
+          <div className="relative flex items-center justify-center">
+            <div className="bg-brand-primary p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center">
+              <Search className="h-10 w-10 text-white stroke-[2.5]" />
+            </div>
+            <Briefcase className="h-4 w-4 text-white absolute -top-1 -right-1 bg-brand-primary rounded-full p-1 border border-white" />
           </div>
-          <span className="text-3xl font-serif font-bold text-brand-primary tracking-tight italic">Inves4Business</span>
+          <span className="text-4xl font-serif font-black text-brand-primary tracking-tight leading-none uppercase italic">Inves4Business</span>
         </Link>
         <h2 className="text-center text-4xl font-serif font-bold text-brand-primary tracking-tight">
           Create <span className="italic text-gray-400">Profile</span>
@@ -135,6 +162,14 @@ export const Register = () => {
             </div>
 
             <div className="space-y-5">
+              <GoogleLoginButton />
+              
+              <div className="relative py-4 flex items-center">
+                <div className="flex-grow border-t border-gray-100"></div>
+                <span className="flex-shrink mx-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest">Or Register</span>
+                <div className="flex-grow border-t border-gray-100"></div>
+              </div>
+
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2 pl-1">Full Name</label>
                 <div className="relative group">
@@ -202,6 +237,15 @@ export const Register = () => {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Mock CAPTCHA placeholder */}
+            <div className="mt-6 p-4 border border-gray-100 rounded-2xl bg-gray-50/50 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-gray-300" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Verified by FriendlyCaptcha</span>
+              </div>
+              <Fingerprint className="h-5 w-5 text-gray-300" />
             </div>
 
             <div className="pt-6">

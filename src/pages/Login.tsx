@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Briefcase, Mail, Lock, AlertCircle, ArrowRight } from "lucide-react";
+import { Briefcase, Mail, Lock, AlertCircle, ArrowRight, Search } from "lucide-react";
 import { motion } from "motion/react";
+import { GoogleLoginButton } from "../components/GoogleLoginButton";
+import { OTPVerification } from "../components/OTPVerification";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [unverifiedUid, setUnverifiedUid] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -26,6 +30,11 @@ export const Login = () => {
       const data = await response.json();
       
       if (!response.ok) {
+        if (data.needsVerification) {
+          setUnverifiedUid(data.uid);
+          setShowVerification(true);
+          return;
+        }
         throw new Error(data.error || "Login failed");
       }
       
@@ -38,14 +47,39 @@ export const Login = () => {
     }
   };
 
+  if (showVerification) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fa] flex flex-col justify-center py-12 px-4">
+        <div className="mb-10 flex flex-col items-center">
+          <Link to="/" className="flex flex-col items-center gap-3 mb-10 group transition-all">
+            <div className="relative flex items-center justify-center">
+              <div className="bg-brand-primary p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center">
+                <Search className="h-10 w-10 text-white stroke-[2.5]" />
+              </div>
+              <Briefcase className="h-4 w-4 text-white absolute -top-1 -right-1 bg-brand-primary rounded-full p-1 border border-white" />
+            </div>
+            <span className="text-4xl font-serif font-black text-brand-primary tracking-tight leading-none uppercase italic">Inves4Business</span>
+          </Link>
+        </div>
+        <OTPVerification uid={unverifiedUid} onSuccess={() => {
+          setShowVerification(false);
+          setError("Account verified. Please log in.");
+        }} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to="/" className="flex justify-center items-center gap-3 mb-10 group transition-all">
-          <div className="bg-brand-primary p-2 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
-             <Briefcase className="h-8 w-8 text-white" />
+        <Link to="/" className="flex flex-col items-center gap-3 mb-10 group transition-all">
+          <div className="relative flex items-center justify-center">
+            <div className="bg-brand-primary p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center">
+              <Search className="h-10 w-10 text-white stroke-[2.5]" />
+            </div>
+            <Briefcase className="h-4 w-4 text-white absolute -top-1 -right-1 bg-brand-primary rounded-full p-1 border border-white" />
           </div>
-          <span className="text-3xl font-serif font-bold text-brand-primary tracking-tight italic">Inves4Business</span>
+          <span className="text-4xl font-serif font-black text-brand-primary tracking-tight leading-none uppercase italic">Inves4Business</span>
         </Link>
         <h2 className="text-center text-4xl font-serif font-bold text-brand-primary tracking-tight">
           Secure <span className="italic text-gray-400">Access</span>
@@ -64,6 +98,16 @@ export const Login = () => {
         className="mt-10 sm:mx-auto sm:w-full sm:max-w-md"
       >
         <div className="bg-white py-12 px-6 shadow-2xl shadow-brand-primary/5 sm:rounded-[2rem] sm:px-12 border border-gray-100">
+          <div className="mb-8">
+            <GoogleLoginButton />
+          </div>
+
+          <div className="relative py-4 flex items-center mb-6">
+            <div className="flex-grow border-t border-gray-100"></div>
+            <span className="flex-shrink mx-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest">Or Use Institutional Access</span>
+            <div className="flex-grow border-t border-gray-100"></div>
+          </div>
+
           <form className="space-y-8" onSubmit={handleLogin}>
             {error && (
               <motion.div 

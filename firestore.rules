@@ -10,6 +10,9 @@
 //   - email: string (required)
 //   - phone: string
 //   - role: string (required, ['buyer', 'vendor', 'admin'])
+//   - status: string (required, ['Unverified', 'Active', 'Blocked'])
+//   - googleConnected: boolean
+//   - profileImage: string
 //   - subscription: map (optional)
 //
 // Collection: businesses
@@ -59,7 +62,7 @@ service cloud.firestore {
     
     function isAdmin() {
       return isAuthenticated() && 
-        (request.auth.token.get('role', 'user') == 'admin' ||
+        (request.auth.token.get('role', '') == 'admin' ||
          request.auth.token.get('email', '') == "nandhanandha2426@gmail.com");
     }
     
@@ -67,14 +70,23 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.token.role == 'vendor';
     }
 
+    function isActive() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('status', 'Unverified') == 'Active';
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin() || isActive());
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    match /user_security/{userId} {
+      allow read, write: if false; // Only server-side access via admin SDK
     }
 
     match /public_profiles/{userId} {
@@ -85,15 +97,15 @@ service cloud.firestore {
     match /businesses/{businessId} {
       allow read: if resource.data.get('status', '') == 'approved' || 
                     (isAuthenticated() && (resource.data.get('ownerId', '') == request.auth.uid || isAdmin()));
-      allow create: if isVendor() || isAdmin();
-      allow update: if (isAuthenticated() && (resource.data.get('ownerId', '') == request.auth.uid || isAdmin())) ||
+      allow create: if (isVendor() && isActive()) || isAdmin();
+      allow update: if (isActive() && (resource.data.get('ownerId', '') == request.auth.uid || isAdmin())) ||
                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']));
-      allow delete: if (isAuthenticated() && (resource.data.get('ownerId', '') == request.auth.uid || isAdmin()));
+      allow delete: if (isActive() && (resource.data.get('ownerId', '') == request.auth.uid || isAdmin()));
     }
 
     match /enquiries/{enquiryId} {
       allow read: if isAuthenticated() && (resource.data.get('userId', '') == request.auth.uid || resource.data.get('vendorId', '') == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated();
+      allow create: if isActive();
     }
 
     match /payments/{paymentId} {

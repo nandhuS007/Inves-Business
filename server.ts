@@ -20,6 +20,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-fallback-secret-key";
+const FRIENDLY_CAPTCHA_SECRET = process.env.FRIENDLY_CAPTCHA_SECRET || "";
+
+// Rate Limit Store
+const signupRateLimits: Map<string, { attempts: number; lastAttempt: number }> = new Map();
+
+// Disposable Email Domains
+const DISPOSABLE_DOMAINS = new Set([
+  "tempmail.com", "10minutemail.com", "dispostable.com", 
+  "guerrillamail.com", "temp-mail.org", "maildrop.cc",
+  "yopmail.com", "mailinator.com"
+]);
+
+const isDisposableEmail = (email: string) => {
+  const domain = email.split("@")[1]?.toLowerCase();
+  return DISPOSABLE_DOMAINS.has(domain);
+};
+
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
 
 // Initialize Firebase Admin
 // ... (rest of the initialization)
@@ -63,7 +83,7 @@ async function seedAdmin() {
       email: adminEmail,
       password: hashedPassword,
       role: "admin",
-      status: "active",
+      status: "Active",
       createdAt: new Date().toISOString()
     });
     console.log("Admin user seeded successfully.");
@@ -128,7 +148,26 @@ async function startServer() {
   // Auth Routes
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { name, email, phone, password, role } = req.body;
+      const { name, email, phone, password, role, captchaSolution } = req.body;
+      const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+
+      // 1. Rate Limiting
+      const now = Date.now();
+      const userLimits = signupRateLimits.get(ip as string) || { attempts: 0, lastAttempt: 0 };
+      if (userLimits.attempts >= 3 && now - userLimits.lastAttempt < 3600000) {
+        return res.status(429).json({ error: "Too many signup attempts. Please try again in an hour." });
+      }
+
+      // 2. CAPTCHA Verification (Optional if secret provided)
+      if (FRIENDLY_CAPTCHA_SECRET && captchaSolution) {
+        // Implement verification call if needed
+      }
+
+      // 3. Disposable Email Blocking
+      if (isDisposableEmail(email)) {
+        return res.status(400).json({ error: "Please use a valid email address" });
+      }
+
       if (admin.apps.length === 0) throw new Error("Database not initialized");
       
       const db = admin.firestore();
@@ -136,32 +175,182 @@ async function startServer() {
       const snapshot = await userRef.get();
       
       if (!snapshot.empty) {
-        return res.status(400).json({ error: "User already exists" });
+        return res.status(400).json({ error: "Email already exists" });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
+      const otp = generateOTP();
+      const otpExpiry = new Date(now + 300000).toISOString(); // 5 minutes
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+      const verificationTokenExpiry = new Date(now + 600000).toISOString(); // 10 minutes
+
       const newUser = {
         name,
         email,
         phone,
         password: hashedPassword,
         role: role || "user",
-        status: "active",
+        status: "Unverified",
         createdAt: new Date().toISOString()
       };
 
       const docRef = await db.collection("users").add(newUser);
       
-      // Create public profile for vendors
-      if (role === "vendor") {
-        await db.collection("public_profiles").doc(docRef.id).set({
-          name,
-          role: "vendor",
-          createdAt: newUser.createdAt
-        });
+      // Store security data
+      await db.collection("user_security").doc(docRef.id).set({
+        otp,
+        otpExpiry,
+        otpAttempts: 0,
+        verificationToken,
+        verificationTokenExpiry,
+        lastSignupAttempt: now,
+        lastResendAt: 0
+      });
+
+      // Update rate limits
+      signupRateLimits.set(ip as string, { attempts: userLimits.attempts + 1, lastAttempt: now });
+
+      // Send Verification Email
+      const verificationLink = `${process.env.APP_URL || "http://localhost:3000"}/verify-email?token=${verificationToken}&uid=${docRef.id}`;
+      
+      await sendEmail(
+        email,
+        "Verify your Inves4Business account",
+        `Your OTP is ${otp}. Or verify via this link: ${verificationLink}`,
+        `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 12px;">
+            <h2 style="color: #002366; text-align: center;">Welcome to Inves4Business</h2>
+            <p>Please use the following OTP to verify your account. It expires in 5 minutes.</p>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #002366; margin: 20px 0;">
+              ${otp}
+            </div>
+            <p>Alternatively, click the button below to verify your email. The link expires in 10 minutes.</p>
+            <div style="text-align: center;">
+              <a href="${verificationLink}" style="display: inline-block; background: #002366; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Verify Email</a>
+            </div>
+            <p style="margin-top: 30px; font-size: 12px; color: #666; text-align: center;">If you didn't sign up for an account, you can safely ignore this email.</p>
+          </div>
+        `
+      );
+
+      res.json({ uid: docRef.id, message: "Verification code sent to your email" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/verify-otp", async (req, res) => {
+    try {
+      const { uid, otp } = req.body;
+      const db = admin.firestore();
+      
+      const securityDoc = await db.collection("user_security").doc(uid).get();
+      if (!securityDoc.exists) return res.status(404).json({ error: "User not found" });
+
+      const securityData = securityDoc.data()!;
+      if (securityData.otpAttempts >= 3) {
+        return res.status(403).json({ error: "Maximum attempts reached. Please request a new OTP." });
       }
 
-      res.json({ id: docRef.id, uid: docRef.id, message: "User registered successfully" });
+      if (new Date(securityData.otpExpiry) < new Date()) {
+        return res.status(400).json({ error: "OTP has expired" });
+      }
+
+      if (securityData.otp !== otp) {
+        await securityDoc.ref.update({ otpAttempts: securityData.otpAttempts + 1 });
+        return res.status(400).json({ error: "Invalid OTP" });
+      }
+
+      // Success
+      await db.collection("users").doc(uid).update({ status: "Active" });
+      await securityDoc.ref.update({ otp: null, otpAttempts: 0 });
+
+      res.json({ status: "Active", message: "Account verified successfully" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/verify-email-token", async (req, res) => {
+    try {
+      const { uid, token } = req.body;
+      const db = admin.firestore();
+      
+      const securityDoc = await db.collection("user_security").doc(uid).get();
+      if (!securityDoc.exists) return res.status(404).json({ error: "User not found" });
+
+      const securityData = securityDoc.data()!;
+      if (new Date(securityData.verificationTokenExpiry) < new Date()) {
+        return res.status(400).json({ error: "Verification link expired" });
+      }
+
+      if (securityData.verificationToken !== token) {
+        return res.status(400).json({ error: "Invalid verification link" });
+      }
+
+      // Success
+      await db.collection("users").doc(uid).update({ status: "Active" });
+      await securityDoc.ref.update({ verificationToken: null });
+
+      res.json({ status: "Active", message: "Account verified via link successfully" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/resend-verification", async (req, res) => {
+    try {
+      const { uid } = req.body;
+      const db = admin.firestore();
+      
+      const userDoc = await db.collection("users").doc(uid).get();
+      if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+      const userData = userDoc.data()!;
+
+      const securityDoc = await db.collection("user_security").doc(uid).get();
+      const securityData = securityDoc.data()!;
+
+      const now = Date.now();
+      if (securityData.lastResendAt && now - securityData.lastResendAt < 30000) {
+        return res.status(429).json({ error: "Please wait 30 seconds before requesting again" });
+      }
+
+      const otp = generateOTP();
+      const otpExpiry = new Date(now + 300000).toISOString();
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+      const verificationTokenExpiry = new Date(now + 600000).toISOString();
+
+      await securityDoc.ref.update({
+        otp,
+        otpExpiry,
+        otpAttempts: 0,
+        verificationToken,
+        verificationTokenExpiry,
+        lastResendAt: now
+      });
+
+      const verificationLink = `${process.env.APP_URL || "http://localhost:3000"}/verify-email?token=${verificationToken}&uid=${uid}`;
+
+      await sendEmail(
+        userData.email,
+        "Your new verification code for Inves4Business",
+        `Your new OTP is ${otp}. Link: ${verificationLink}`,
+        `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 12px;">
+            <h2 style="color: #002366; text-align: center;">Inves4Business Verification</h2>
+            <p>You requested a new verification code. It expires in 5 minutes.</p>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #002366; margin: 20px 0;">
+              ${otp}
+            </div>
+            <p>Alternatively, use this button (expires in 10 minutes):</p>
+            <div style="text-align: center;">
+              <a href="${verificationLink}" style="display: inline-block; background: #002366; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Verify Email</a>
+            </div>
+          </div>
+        `
+      );
+
+      res.json({ message: "New verification code sent" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -183,14 +372,19 @@ async function startServer() {
       const userDoc = snapshot.docs[0];
       const userData = userDoc.data();
 
-      const validPassword = await bcrypt.compare(password, userData.password);
-      if (!validPassword) {
-        return res.status(400).json({ error: "Invalid password" });
+      if (userData.status === "Unverified") {
+        return res.status(403).json({ 
+          error: "Account not verified", 
+          uid: userDoc.id, 
+          needsVerification: true 
+        });
       }
 
-      if (userData.status === "blocked") {
+      if (userData.status === "Blocked") {
         return res.status(403).json({ error: "Account is blocked" });
       }
+
+      const validPassword = await bcrypt.compare(password, userData.password);
 
       const token = jwt.sign(
         { id: userDoc.id, uid: userDoc.id, email: userData.email, role: userData.role },
@@ -209,6 +403,66 @@ async function startServer() {
         token, 
         firebaseToken,
         user: { id: userDoc.id, uid: userDoc.id, name: userData.name, email: userData.email, role: userData.role } 
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/google-sync", async (req, res) => {
+    try {
+      const { googleUser } = req.body; // User info from Firebase Client SDK
+      if (!googleUser || !googleUser.email) return res.status(400).json({ error: "Invalid Google user data" });
+
+      const db = admin.firestore();
+      const userRef = db.collection("users").where("email", "==", googleUser.email);
+      const snapshot = await userRef.get();
+
+      let userDocId;
+      let userData;
+
+      if (snapshot.empty) {
+        // Create new auto-verified user
+        const newUser = {
+          name: googleUser.displayName || "Google User",
+          email: googleUser.email,
+          role: "user",
+          status: "Active",
+          googleConnected: true,
+          profileImage: googleUser.photoURL,
+          createdAt: new Date().toISOString()
+        };
+        const docRef = await db.collection("users").add(newUser);
+        userDocId = docRef.id;
+        userData = newUser;
+      } else {
+        // Link to existing user and update status
+        const doc = snapshot.docs[0];
+        userDocId = doc.id;
+        userData = doc.data();
+        await doc.ref.update({ 
+          googleConnected: true, 
+          status: "Active", 
+          profileImage: googleUser.photoURL || userData.profileImage 
+        });
+      }
+
+      const token = jwt.sign(
+        { id: userDocId, uid: userDocId, email: googleUser.email, role: userData.role },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      const firebaseToken = await admin.auth().createCustomToken(userDocId, { 
+        role: userData.role,
+        email: googleUser.email,
+        email_verified: true
+      });
+
+      res.json({ 
+        token, 
+        firebaseToken,
+        user: { id: userDocId, uid: userDocId, name: googleUser.displayName, email: googleUser.email, role: userData.role } 
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message });

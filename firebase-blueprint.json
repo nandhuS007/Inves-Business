@@ -10,6 +10,9 @@
         "email": { "type": "string" },
         "phone": { "type": "string" },
         "role": { "type": "string", "enum": ["buyer", "vendor", "admin"] },
+        "status": { "type": "string", "enum": ["Unverified", "Active", "Blocked"] },
+        "googleConnected": { "type": "boolean" },
+        "profileImage": { "type": "string" },
         "subscription": {
           "type": "object",
           "properties": {
@@ -116,6 +119,22 @@
     "/users/{userId}": {
       "schema": "User",
       "description": "User profiles"
+    },
+    "/user_security/{userId}": {
+      "schema": {
+        "title": "UserSecurity",
+        "type": "object",
+        "properties": {
+          "otp": { "type": "string" },
+          "otpExpiry": { "type": "string", "format": "date-time" },
+          "otpAttempts": { "type": "number" },
+          "verificationToken": { "type": "string" },
+          "verificationTokenExpiry": { "type": "string", "format": "date-time" },
+          "lastSignupAttempt": { "type": "string", "format": "date-time" },
+          "lastResendAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "description": "Sensitive security data not accessible by clients"
     },
     "/businesses/{businessId}": {
       "schema": "Business",

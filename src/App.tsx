@@ -16,10 +16,9 @@ import { Profile } from "./pages/Profile";
 import { VendorProfile } from "./pages/VendorProfile";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
+import { VerifyEmail } from "./pages/VerifyEmail";
 import MessagesPage from "./pages/Messages";
 import { useEffect } from "react";
-import { doc, getDocFromServer } from "firebase/firestore";
-import { db } from "./lib/firebase";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; role?: string }> = ({ children, role }) => {
   const { user, profile, loading } = useAuth();
@@ -44,6 +43,7 @@ function AppRoutes() {
       <Route path="/vendor-profile/:id" element={<VendorProfile />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route 
         path="/messages" 
         element={
@@ -98,21 +98,6 @@ function AppRoutes() {
 }
 
 export default function App() {
-  useEffect(() => {
-    async function testConnection() {
-      try {
-        await getDocFromServer(doc(db, 'test', 'connection'));
-        console.log("Firestore connection successful");
-      } catch (error) {
-        if(error instanceof Error && error.message.includes('the client is offline')) {
-          console.error("Please check your Firebase configuration. The client is offline.");
-        }
-        // Skip logging for other errors, as this is simply a connection test.
-      }
-    }
-    testConnection();
-  }, []);
-
   return (
     <AuthProvider>
       <Router>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Briefcase, Mail, AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Briefcase, Mail, AlertCircle, ArrowLeft, CheckCircle2, Search } from "lucide-react";
 import { motion } from "motion/react";
 
 export const ForgotPassword = () => {
@@ -39,9 +39,14 @@ export const ForgotPassword = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to="/" className="flex justify-center items-center gap-2 mb-6">
-          <Briefcase className="h-10 w-10 text-[#002366]" />
-          <span className="text-2xl font-bold text-[#002366]">Inves4Business</span>
+        <Link to="/" className="flex flex-col items-center gap-3 mb-10 group transition-all">
+          <div className="relative flex items-center justify-center">
+            <div className="bg-brand-primary p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center">
+              <Search className="h-10 w-10 text-white stroke-[2.5]" />
+            </div>
+            <Briefcase className="h-4 w-4 text-white absolute -top-1 -right-1 bg-brand-primary rounded-full p-1 border border-white" />
+          </div>
+          <span className="text-4xl font-serif font-black text-brand-primary tracking-tight leading-none uppercase italic">Inves4Business</span>
         </Link>
         <h2 className="text-center text-3xl font-extrabold text-gray-900 tracking-tight">
           Reset your password
