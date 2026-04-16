@@ -5,15 +5,19 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-console.log('--- Hostinger Production Bridge ---');
-console.log('Node:', process.execPath);
-console.log('Port:', process.env.PORT);
+const node = process.execPath;
+const args = [
+  '--import', 'tsx',
+  'server.ts'
+];
 
-// We tell npm to run the "start" script. 
-// This is the most reliable way as it handles all paths automatically.
-const child = spawn('npm', ['run', 'start'], {
+console.log('--- Hostinger Production Bridge (V3) ---');
+console.log('Node Binary:', node);
+console.log('Arguments:', args.join(' '));
+console.log('CWD:', __dirname);
+
+const child = spawn(node, args, {
   stdio: 'inherit',
-  shell: true,
   cwd: __dirname,
   env: { 
     ...process.env, 
@@ -22,7 +26,7 @@ const child = spawn('npm', ['run', 'start'], {
 });
 
 child.on('error', (err) => {
-  console.error('CRITICAL ERROR:', err);
+  console.error('CRITICAL ERROR spawning child:', err);
 });
 
 child.on('close', (code) => {
