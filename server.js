@@ -14,12 +14,19 @@ console.log('Port:', process.env.PORT);
 const start = () => {
   console.log('Attempting to start server with tsx loader...');
   
-  // We use Node directly with the tsx loader for maximum compatibility
-  // This avoids issues with shell/npx pathing
-  const child = spawn('node', [
+  // Use process.execPath to ensure we use the same node binary that is running this script
+  // This solves the 'spawn node ENOENT' error on some hosting environments
+  const nodeBinary = process.execPath;
+  console.log('Using Node Binary:', nodeBinary);
+
+  const args = [
     '--import', 'tsx',
     'server.ts'
-  ], {
+  ];
+
+  console.log('Command:', nodeBinary, args.join(' '));
+
+  const child = spawn(nodeBinary, args, {
     stdio: 'inherit',
     cwd: __dirname,
     env: { 
