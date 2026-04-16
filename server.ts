@@ -42,8 +42,7 @@ const generateOTP = () => {
 };
 
 // Initialize Firebase Admin
-// ... (rest of the initialization)
-const serviceAccountVar = process.env.FIREBASE_SERVICE_ACCOUNT;
+const serviceAccountVar = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 if (serviceAccountVar && serviceAccountVar !== "FIREBASE_SERVICE_ACCOUNT" && serviceAccountVar.startsWith("{")) {
   try {
     const serviceAccount = JSON.parse(serviceAccountVar);
@@ -92,7 +91,7 @@ async function seedAdmin() {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(helmet({
     contentSecurityPolicy: false, // Disable for Vite dev server compatibility
