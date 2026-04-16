@@ -11,18 +11,22 @@ console.log('Node Version:', process.version);
 console.log('Directory:', __dirname);
 console.log('Port:', process.env.PORT);
 
-// Try to find tsx. We prefer the one in node_modules, but fallback to 'npx tsx'
-const serverPath = join(__dirname, 'server.ts');
-
 const start = () => {
-  console.log('Attempting to start server with tsx...');
+  console.log('Attempting to start server with tsx loader...');
   
-  // Use 'npx' as it handles pathing for binaries automatically
-  const child = spawn('npx', ['tsx', 'server.ts'], {
+  // We use Node directly with the tsx loader for maximum compatibility
+  // This avoids issues with shell/npx pathing
+  const child = spawn('node', [
+    '--import', 'tsx',
+    'server.ts'
+  ], {
     stdio: 'inherit',
-    shell: true,
     cwd: __dirname,
-    env: { ...process.env, NODE_ENV: 'production' }
+    env: { 
+      ...process.env, 
+      NODE_ENV: 'production',
+      PORT: process.env.PORT || '3000'
+    }
   });
 
   child.on('error', (err) => {
@@ -32,8 +36,8 @@ const start = () => {
   child.on('close', (code) => {
     console.log(`Server process exited with code ${code}`);
     if (code !== 0) {
-      console.log('Restarting in 5 seconds...');
-      setTimeout(start, 5000);
+      console.log('Restarting in 10 seconds...');
+      setTimeout(start, 10000);
     }
   });
 };
