@@ -23,7 +23,7 @@ export const Home = () => {
     queryFn: async () => {
       console.log("Fetching listings. Auth State:", auth.currentUser ? `Logged in as ${auth.currentUser.uid}` : "Not logged in");
       const q = query(
-        collection(db, "businesses"),
+        collection(db, "listings"),
         where("status", "==", "approved")
       );
       const snapshot = await getDocs(q);

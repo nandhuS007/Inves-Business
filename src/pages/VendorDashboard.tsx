@@ -22,7 +22,7 @@ export const VendorDashboard = () => {
     queryKey: ["vendor-listings", user?.uid],
     queryFn: async () => {
       if (!user) return [];
-      const q = query(collection(db, "businesses"), where("ownerId", "==", user.uid));
+      const q = query(collection(db, "listings"), where("ownerId", "==", user.uid));
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
@@ -44,7 +44,7 @@ export const VendorDashboard = () => {
   // Delete Listing Mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, "businesses", id));
+      await deleteDoc(doc(db, "listings", id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vendor-listings"] });

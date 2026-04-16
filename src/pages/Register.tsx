@@ -11,7 +11,7 @@ export const Register = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState<"user" | "vendor">("user");
+  const [role, setRole] = useState<"user" | "seller">("user");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -79,7 +79,7 @@ export const Register = () => {
               <h2 className="text-2xl font-bold text-gray-900">Account Created</h2>
             </div>
             <p className="text-gray-600 mb-8">
-              Welcome to Inves4Business! Your <span className="font-bold text-[#002366] capitalize">{role === "user" ? "buyer" : "vendor"}</span> account has been successfully created.
+              Welcome to Inves4Business! Your <span className="font-bold text-[#002366] capitalize">{role === "user" ? "investor" : "seller"}</span> account has been successfully created.
               <br /><br />
               You can now log in to access your dashboard.
             </p>
@@ -150,14 +150,14 @@ export const Register = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setRole("vendor")}
+                onClick={() => setRole("seller")}
                 className={cn(
                   "flex flex-col items-center gap-3 p-5 rounded-2xl border transition-all",
-                  role === "vendor" ? "border-brand-primary bg-brand-primary/5 ring-1 ring-brand-primary" : "border-gray-100 bg-gray-50/50 hover:border-gray-200"
+                  role === "seller" ? "border-brand-primary bg-brand-primary/5 ring-1 ring-brand-primary" : "border-gray-100 bg-gray-50/50 hover:border-gray-200"
                 )}
               >
-                <Briefcase className={cn("h-6 w-6", role === "vendor" ? "text-brand-primary" : "text-gray-400")} />
-                <span className={cn("text-[10px] font-bold uppercase tracking-widest", role === "vendor" ? "text-brand-primary" : "text-gray-500")}>Provider</span>
+                <Briefcase className={cn("h-6 w-6", role === "seller" ? "text-brand-primary" : "text-gray-400")} />
+                <span className={cn("text-[10px] font-bold uppercase tracking-widest", role === "seller" ? "text-brand-primary" : "text-gray-500")}>Provider</span>
               </button>
             </div>
 

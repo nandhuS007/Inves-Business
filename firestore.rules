@@ -1,49 +1,3 @@
-// ===============================================================
-// Assumed Data Model
-// ===============================================================
-//
-// Collection: users
-// Document ID: {userId}
-// Fields:
-//   - uid: string (required)
-//   - name: string
-//   - email: string (required)
-//   - phone: string
-//   - role: string (required, ['buyer', 'vendor', 'admin'])
-//   - status: string (required, ['Unverified', 'Active', 'Blocked'])
-//   - googleConnected: boolean
-//   - profileImage: string
-//   - subscription: map (optional)
-//
-// Collection: businesses
-// Document ID: {businessId}
-// Fields:
-//   - title: string (required)
-//   - category: string (required, ['Micro Business', 'Partnership Sale', 'Full Business', 'Investment'])
-//   - price: number (required)
-//   - location: string (required)
-//   - description: string (required)
-//   - revenue: number
-//   - profit: number
-//   - yearsOfOperation: number
-//   - documents: list of strings
-//   - images: list of strings
-//   - status: string (required, ['under_review', 'approved', 'rejected'])
-//   - isFeatured: bool
-//   - ownerId: string (required)
-//   - createdAt: timestamp
-//
-// Collection: enquiries
-// Document ID: {enquiryId}
-// Fields:
-//   - userId: string (required)
-//   - businessId: string (required)
-//   - vendorId: string (required)
-//   - message: string (required)
-//   - createdAt: timestamp
-//
-// ===============================================================
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -62,75 +16,111 @@ service cloud.firestore {
     
     function isAdmin() {
       return isAuthenticated() && 
-        (request.auth.token.get('role', '') == 'admin' ||
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'admin' ||
          request.auth.token.get('email', '') == "nandhanandha2426@gmail.com");
     }
-    
-    function isVendor() {
-      return isAuthenticated() && request.auth.token.role == 'vendor';
+
+    function isSeller() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'seller';
     }
 
     function isActive() {
       return isAuthenticated() && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('status', 'Unverified') == 'Active';
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('status', 'blocked') == 'active';
+    }
+
+    function isDocOwner(docData) {
+      return isAuthenticated() && request.auth.uid == docData.ownerId;
     }
 
     // ===============================================================
     // Rules
     // ===============================================================
 
+    // 1. Users Collection
     match /users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin() || isActive());
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
     }
 
-    match /user_security/{userId} {
-      allow read, write: if false; // Only server-side access via admin SDK
+    // 2. Listings Collection
+    match /listings/{listingId} {
+      allow read: if resource.data.status == 'approved' || 
+                    (isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin()));
+      
+      // Only sellers/admins can create, must be active
+      allow create: if (isSeller() || isAdmin()) && isActive();
+      
+      // Only owner/admin can update. Status change is admin only or seller can request 'under_review'
+      allow update: if (isActive() && (resource.data.ownerId == request.auth.uid || isAdmin())) &&
+                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['analytics']) || 
+                        isAdmin() || 
+                        (resource.data.ownerId == request.auth.uid && request.resource.data.status == 'under_review'));
+      
+      allow delete: if isActive() && (resource.data.ownerId == request.auth.uid || isAdmin());
     }
 
-    match /public_profiles/{userId} {
-      allow read: if true;
-      allow write: if isAdmin() || isOwner(userId);
+    // 3. Documents Collection
+    match /documents/{docId} {
+      allow read: if isAuthenticated() && (request.auth.uid == (resource.data.userId || "") || isAdmin() || 
+                    (exists(/databases/$(database)/documents/listings/$(resource.data.listingId)) && 
+                     get(/databases/$(database)/documents/listings/$(resource.data.listingId)).data.ownerId == request.auth.uid));
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow update: if isAdmin();
+      allow delete: if isAuthenticated() && (request.auth.uid == (resource.data.userId || "") || isAdmin());
     }
 
-    match /businesses/{businessId} {
-      allow read: if resource.data.get('status', '') == 'approved' || 
-                    (isAuthenticated() && (resource.data.get('ownerId', '') == request.auth.uid || isAdmin()));
-      allow create: if (isVendor() && isActive()) || isAdmin();
-      allow update: if (isActive() && (resource.data.get('ownerId', '') == request.auth.uid || isAdmin())) ||
-                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']));
-      allow delete: if (isActive() && (resource.data.get('ownerId', '') == request.auth.uid || isAdmin()));
+    // 8. Orders Collection
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    match /enquiries/{enquiryId} {
-      allow read: if isAuthenticated() && (resource.data.get('userId', '') == request.auth.uid || resource.data.get('vendorId', '') == request.auth.uid || isAdmin());
-      allow create: if isActive();
-    }
-
-    match /payments/{paymentId} {
-      allow read: if isAuthenticated() && (resource.data.get('userId', '') == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated();
-    }
-
+    // 4. Plans Collection
     match /plans/{planId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    match /test/connection {
-      allow read: if true;
+    // 5. Reviews Collection
+    match /reviews/{reviewId} {
+      allow read: if isAuthenticated() && 
+                    (isAdmin() || 
+                     (exists(/databases/$(database)/documents/listings/$(resource.data.listingId)) && 
+                      get(/databases/$(database)/documents/listings/$(resource.data.listingId)).data.ownerId == request.auth.uid));
+      allow write: if isAdmin();
     }
 
+    // 6. Chats Collection
     match /chats/{chatId} {
-      allow read: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      allow read, write: if isAuthenticated() && request.auth.uid in resource.data.participants;
       allow create: if isAuthenticated() && request.auth.uid in request.resource.data.participants;
-      allow update: if isAuthenticated() && request.auth.uid in resource.data.participants;
       
       match /messages/{messageId} {
-        allow read: if isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
-        allow create: if isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow read, write: if isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
       }
+    }
+
+    // 7. Favorites Collection
+    match /favorites/{favoriteId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // 9. Enquiries Collection
+    match /enquiries/{enquiryId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin() || 
+                    (exists(/databases/$(database)/documents/listings/$(resource.data.businessId)) && 
+                     get(/databases/$(database)/documents/listings/$(resource.data.businessId)).data.ownerId == request.auth.uid));
+      allow create: if isAuthenticated();
+      allow delete: if isAdmin();
     }
   }
 }

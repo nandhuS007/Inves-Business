@@ -20,7 +20,7 @@ export const ChatList: React.FC<ChatListProps> = ({ chats, selectedChatId, onSel
           <MessageSquare className="h-8 w-8" />
         </div>
         <h3 className="font-bold text-gray-900 mb-1">No messages yet</h3>
-        <p className="text-sm">When you contact vendors, your conversations will appear here.</p>
+        <p className="text-sm">When you contact sellers, your conversations will appear here.</p>
       </div>
     );
   }

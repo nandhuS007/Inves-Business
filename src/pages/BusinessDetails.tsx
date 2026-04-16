@@ -25,7 +25,7 @@ export const BusinessDetails = () => {
     queryKey: ["business", id],
     queryFn: async () => {
       if (!id) throw new Error("No ID provided");
-      const docRef = doc(db, "businesses", id);
+      const docRef = doc(db, "listings", id);
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) throw new Error("Business not found");
       
@@ -47,7 +47,7 @@ export const BusinessDetails = () => {
     queryFn: async () => {
       if (!business?.category) return [];
       const q = query(
-        collection(db, "businesses"),
+        collection(db, "listings"),
         where("category", "==", business.category),
         where("status", "==", "approved"),
         limit(4)

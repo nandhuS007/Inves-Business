@@ -72,7 +72,7 @@ function AppRoutes() {
       <Route 
         path="/vendor" 
         element={
-          <ProtectedRoute role="vendor">
+          <ProtectedRoute role="seller">
             <VendorDashboard />
           </ProtectedRoute>
         } 
@@ -80,7 +80,7 @@ function AppRoutes() {
       <Route 
         path="/add-listing" 
         element={
-          <ProtectedRoute role="vendor">
+          <ProtectedRoute role="seller">
             <AddListing />
           </ProtectedRoute>
         } 

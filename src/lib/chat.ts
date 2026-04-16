@@ -34,7 +34,7 @@ export interface Chat {
 
 export const chatService = {
   // Get or create a chat between two users for a specific business
-  getOrCreateChat: async (businessId: string, businessTitle: string, buyerId: string, vendorId: string) => {
+  getOrCreateChat: async (businessId: string, businessTitle: string, buyerId: string, sellerId: string) => {
     const chatsRef = collection(db, "chats");
     const q = query(
       chatsRef, 
@@ -43,7 +43,7 @@ export const chatService = {
     );
     
     const snapshot = await getDocs(q);
-    const existingChat = snapshot.docs.find(doc => doc.data().participants.includes(vendorId));
+    const existingChat = snapshot.docs.find(doc => doc.data().participants.includes(sellerId));
     
     if (existingChat) {
       return { id: existingChat.id, ...existingChat.data() } as Chat;
@@ -52,8 +52,8 @@ export const chatService = {
     const newChatData = {
       businessId,
       businessTitle,
-      participants: [buyerId, vendorId],
-      unreadCount: { [buyerId]: 0, [vendorId]: 0 },
+      participants: [buyerId, sellerId],
+      unreadCount: { [buyerId]: 0, [sellerId]: 0 },
       updatedAt: serverTimestamp()
     };
     

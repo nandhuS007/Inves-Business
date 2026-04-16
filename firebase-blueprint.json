@@ -2,117 +2,121 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "User profile information",
-      "type": "object",
-      "properties": {
-        "uid": { "type": "string" },
-        "name": { "type": "string" },
-        "email": { "type": "string" },
-        "phone": { "type": "string" },
-        "role": { "type": "string", "enum": ["buyer", "vendor", "admin"] },
-        "status": { "type": "string", "enum": ["Unverified", "Active", "Blocked"] },
-        "googleConnected": { "type": "boolean" },
-        "profileImage": { "type": "string" },
-        "subscription": {
-          "type": "object",
-          "properties": {
-            "planId": { "type": "string" },
-            "active": { "type": "boolean" },
-            "expiryDate": { "type": "string", "format": "date-time" },
-            "listingCount": { "type": "number" }
-          }
-        }
-      },
-      "required": ["uid", "email", "role"]
-    },
-    "Business": {
-      "title": "Business",
-      "description": "Business listing for sale",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "category": { "type": "string", "enum": ["Micro Business", "Partnership Sale", "Full Business", "Investment"] },
-        "price": { "type": "number" },
-        "location": { "type": "string" },
-        "description": { "type": "string" },
-        "revenue": { "type": "number" },
-        "profit": { "type": "number" },
-        "yearsOfOperation": { "type": "number" },
-        "documents": { "type": "array", "items": { "type": "string" } },
-        "images": { "type": "array", "items": { "type": "string" } },
-        "status": { "type": "string", "enum": ["under_review", "approved", "rejected"] },
-        "isFeatured": { "type": "boolean" },
-        "ownerId": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["title", "category", "price", "location", "description", "status", "ownerId"]
-    },
-    "Enquiry": {
-      "title": "Enquiry",
-      "description": "Enquiry sent by a buyer to a vendor",
+      "description": "User account information",
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
-        "businessId": { "type": "string" },
-        "vendorId": { "type": "string" },
-        "message": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "profileImage": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "seller", "admin"] },
+        "status": { "type": "string", "enum": ["active", "blocked"] },
+        "authProvider": { "type": "string", "enum": ["email", "google"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "businessId", "vendorId", "message"]
+      "required": ["userId", "email", "role", "status", "authProvider", "createdAt"]
+    },
+    "Listing": {
+      "title": "Listing",
+      "description": "Business for sale",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "location": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "planType": { "type": "string", "enum": ["silver", "gold", "platinum"] },
+        "status": { "type": "string", "enum": ["under_review", "approved", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "analytics": {
+          "type": "object",
+          "properties": {
+            "views": { "type": "number" },
+            "clicks": { "type": "number" }
+          }
+        }
+      },
+      "required": ["title", "description", "price", "ownerId", "status", "createdAt"]
+    },
+    "Document": {
+      "title": "Document",
+      "description": "Uploaded business proof",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "listingId": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "fileType": { "type": "string" },
+        "uploadedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "listingId", "fileUrl", "fileType", "uploadedAt"]
     },
     "Plan": {
       "title": "Plan",
       "description": "Subscription plan details",
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
+        "name": { "type": "string", "enum": ["Silver", "Gold", "Platinum"] },
         "price": { "type": "number" },
-        "listingLimit": { "type": "number" },
-        "isFeatured": { "type": "boolean" }
+        "duration": { "type": "string" },
+        "features": { "type": "array", "items": { "type": "string" } }
       },
-      "required": ["name", "price", "listingLimit"]
+      "required": ["name", "price", "duration"]
     },
-    "Payment": {
-      "title": "Payment",
-      "description": "Payment records for subscriptions",
+    "Review": {
+      "title": "Review",
+      "description": "Admin approval feedback",
       "type": "object",
       "properties": {
-        "userId": { "type": "string" },
-        "planId": { "type": "string" },
-        "amount": { "type": "number" },
-        "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
-        "razorpayOrderId": { "type": "string" },
-        "razorpayPaymentId": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "listingId": { "type": "string" },
+        "status": { "type": "string", "enum": ["under_review", "approved", "rejected"] },
+        "adminId": { "type": "string" },
+        "remarks": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "planId", "amount", "status", "createdAt"]
+      "required": ["listingId", "status", "updatedAt"]
     },
     "Chat": {
       "title": "Chat",
-      "description": "A conversation between a buyer and a vendor",
+      "description": "Conversation between buyer and seller",
       "type": "object",
       "properties": {
-        "businessId": { "type": "string" },
-        "businessTitle": { "type": "string" },
+        "listingId": { "type": "string" },
         "participants": { "type": "array", "items": { "type": "string" } },
         "lastMessage": { "type": "string" },
         "lastMessageAt": { "type": "string", "format": "date-time" },
-        "unreadCount": { "type": "object" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["businessId", "participants", "updatedAt"]
+      "required": ["participants", "updatedAt"]
     },
-    "Message": {
-      "title": "Message",
-      "description": "An individual message within a chat",
+    "Favorite": {
+      "title": "Favorite",
+      "description": "Saved listing for a user",
       "type": "object",
       "properties": {
-        "senderId": { "type": "string" },
-        "text": { "type": "string" },
-        "status": { "type": "string", "enum": ["sent", "delivered", "seen"] },
+        "userId": { "type": "string" },
+        "listingId": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["senderId", "text", "status", "createdAt"]
+      "required": ["userId", "listingId", "createdAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Platform subscription payment",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "orderId": { "type": "string" },
+        "amount": { "type": "number" },
+        "plan": { "type": "string" },
+        "paymentStatus": { "type": "string", "enum": ["paid", "pending", "failed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "amount", "plan", "paymentStatus", "createdAt"]
     }
   },
   "firestore": {
@@ -120,57 +124,45 @@
       "schema": "User",
       "description": "User profiles"
     },
-    "/user_security/{userId}": {
-      "schema": {
-        "title": "UserSecurity",
-        "type": "object",
-        "properties": {
-          "otp": { "type": "string" },
-          "otpExpiry": { "type": "string", "format": "date-time" },
-          "otpAttempts": { "type": "number" },
-          "verificationToken": { "type": "string" },
-          "verificationTokenExpiry": { "type": "string", "format": "date-time" },
-          "lastSignupAttempt": { "type": "string", "format": "date-time" },
-          "lastResendAt": { "type": "string", "format": "date-time" }
-        }
-      },
-      "description": "Sensitive security data not accessible by clients"
-    },
-    "/businesses/{businessId}": {
-      "schema": "Business",
+    "/listings/{listingId}": {
+      "schema": "Listing",
       "description": "Business listings"
     },
-    "/enquiries/{enquiryId}": {
-      "schema": "Enquiry",
-      "description": "Buyer enquiries"
+    "/documents/{docId}": {
+      "schema": "Document",
+      "description": "Verification documents"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Platform transactions"
     },
     "/plans/{planId}": {
       "schema": "Plan",
-      "description": "Available subscription plans"
+      "description": "Marketplace plans"
     },
-    "/payments/{paymentId}": {
-      "schema": "Payment",
-      "description": "Payment records"
-    },
-    "/public_profiles/{userId}": {
-      "schema": {
-        "title": "PublicProfile",
-        "type": "object",
-        "properties": {
-          "name": { "type": "string" },
-          "role": { "type": "string" },
-          "createdAt": { "type": "string", "format": "date-time" }
-        }
-      },
-      "description": "Publicly accessible vendor profiles"
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Listing audit logs"
     },
     "/chats/{chatId}": {
       "schema": "Chat",
-      "description": "Conversations between users"
+      "description": "Conversations"
     },
     "/chats/{chatId}/messages/{messageId}": {
-      "schema": "Message",
-      "description": "Individual messages in a chat"
+      "schema": {
+        "title": "Message",
+        "type": "object",
+        "properties": {
+          "senderId": { "type": "string" },
+          "text": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "description": "Individual messages"
+    },
+    "/favorites/{favoriteId}": {
+      "schema": "Favorite",
+      "description": "User saved listings"
     }
   }
 }

@@ -25,7 +25,7 @@ export const VendorProfile = () => {
 
         // Fetch Vendor Listings
         const q = query(
-          collection(db, "businesses"),
+          collection(db, "listings"),
           where("ownerId", "==", id),
           where("status", "==", "approved")
         );
@@ -39,7 +39,7 @@ export const VendorProfile = () => {
           setVendor({
             id,
             name: firstListing.ownerName || "Verified Vendor",
-            role: "vendor",
+            role: "seller",
             createdAt: firstListing.createdAt
           });
         }

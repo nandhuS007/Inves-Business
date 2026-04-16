@@ -11,7 +11,8 @@ interface UserProfile {
   name: string;
   email: string;
   phone?: string;
-  role: "user" | "vendor" | "admin";
+  role: "user" | "seller" | "admin";
+  status: "active" | "blocked" | "Unverified";
   favorites?: string[];
   subscription?: {
     planId: string;

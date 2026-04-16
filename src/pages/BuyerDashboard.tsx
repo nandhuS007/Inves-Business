@@ -33,7 +33,7 @@ export const BuyerDashboard = () => {
           const data = enqDoc.data();
           let businessTitle = "Loading...";
           try {
-            const bizDoc = await getDoc(doc(db, "businesses", data.businessId));
+            const bizDoc = await getDoc(doc(db, "listings", data.businessId));
             if (bizDoc.exists()) {
               businessTitle = bizDoc.data().title;
             } else {
@@ -54,7 +54,7 @@ export const BuyerDashboard = () => {
         if (profile?.favorites && profile.favorites.length > 0) {
           console.log("Fetching favorites:", profile.favorites.length);
           const favsData = await Promise.all(profile.favorites.map(async (id: string) => {
-            const bizDoc = await getDoc(doc(db, "businesses", id));
+            const bizDoc = await getDoc(doc(db, "listings", id));
             return bizDoc.exists() ? { id: bizDoc.id, ...bizDoc.data() } : null;
           }));
           setFavorites(favsData.filter(f => f !== null));
@@ -72,14 +72,14 @@ export const BuyerDashboard = () => {
     fetchData();
   }, [user, profile?.favorites]);
 
-  const handleStartChat = async (businessId: string, businessTitle: string, vendorId: string) => {
+  const handleStartChat = async (businessId: string, businessTitle: string, sellerId: string) => {
     if (!user) return;
     try {
       const chat = await chatService.getOrCreateChat(
         businessId,
         businessTitle,
         user.uid,
-        vendorId
+        sellerId
       );
       navigate("/messages", { state: { selectedChatId: chat.id } });
     } catch (error) {

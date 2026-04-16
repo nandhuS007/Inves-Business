@@ -38,7 +38,7 @@ export const Navbar = () => {
                 {profile?.role === "user" && (
                   <Link to="/buyer" className="text-[13px] font-bold uppercase tracking-widest text-gray-500 hover:text-brand-primary transition-colors">Enquiries</Link>
                 )}
-                {profile?.role === "vendor" && (
+                {profile?.role === "seller" && (
                   <Link to="/vendor" className="text-[13px] font-bold uppercase tracking-widest text-gray-500 hover:text-brand-primary transition-colors">Vendor Kit</Link>
                 )}
                 {profile?.role === "admin" && (
@@ -97,7 +97,7 @@ export const Navbar = () => {
               {profile?.role === "user" && (
                 <Link to="/buyer" className="block px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md">My Enquiries</Link>
               )}
-              {profile?.role === "vendor" && (
+              {profile?.role === "seller" && (
                 <Link to="/vendor" className="block px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md">Vendor Panel</Link>
               )}
               {profile?.role === "admin" && (

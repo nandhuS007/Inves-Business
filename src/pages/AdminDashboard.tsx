@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { collection, query, getDocs, doc, updateDoc, where } from "firebase/firestore";
+import { onSnapshot, collection, query, doc, updateDoc, deleteDoc, where, orderBy } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../context/AuthContext";
 import { Navbar } from "../components/Navbar";
@@ -14,142 +14,136 @@ import {
 
 export const AdminDashboard = () => {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<"listings" | "users" | "payments" | "enquiries" | "plans">("listings");
-  const [businesses, setBusinesses] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"listings" | "users" | "orders" | "documents" | "enquiries">("listings");
+  const [listings, setListings] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-  const [payments, setPayments] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [enquiries, setEnquiries] = useState<any[]>([]);
-  const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<{ [key: string]: string }>({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalVendors: 0,
-    totalBusinesses: 0,
-    pendingApprovals: 0,
-    totalRevenue: 0
-  });
+
+  // Real-time Listeners
+  useEffect(() => {
+    if (profile?.role !== "admin") return;
+
+    const unsubListings = onSnapshot(collection(db, "listings"), (snap) => {
+      setListings(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
+      setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    const unsubOrders = onSnapshot(collection(db, "orders"), (snap) => {
+      setOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    const unsubEnquiries = onSnapshot(collection(db, "enquiries"), (snap) => {
+      setEnquiries(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    const unsubDocs = onSnapshot(collection(db, "documents"), (snap) => {
+      setDocuments(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    setLoading(false);
+
+    return () => {
+      unsubListings();
+      unsubUsers();
+      unsubOrders();
+      unsubEnquiries();
+      unsubDocs();
+    };
+  }, [profile]);
+
+  // Metrics
+  const stats = {
+    totalUsers: users.length,
+    totalListings: listings.length,
+    activeListings: listings.filter(l => l.status === "approved").length,
+    pendingListings: listings.filter(l => l.status === "under_review").length,
+    totalRevenue: orders.filter(o => o.paymentStatus === "paid").reduce((acc, o) => acc + (o.amount || 0), 0),
+    totalSellers: users.filter(u => u.role === "seller").length
+  };
 
   // Chart Data
-  const [revenueData, setRevenueData] = useState<any[]>([]);
-  const [userData, setUserData] = useState<any[]>([]);
+  const revenueByPlan = orders
+    .filter(o => o.paymentStatus === "paid")
+    .reduce((acc: any, o: any) => {
+      acc[o.plan] = (acc[o.plan] || 0) + (o.amount || 0);
+      return acc;
+    }, {});
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (profile?.role !== "admin") return;
-      try {
-        console.log("Admin fetching businesses...");
-        const bizSnap = await getDocs(collection(db, "businesses"));
-        const bizData = bizSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setBusinesses(bizData);
-        console.log("Admin fetched businesses:", bizData.length);
+  const revenueData = Object.keys(revenueByPlan).map(key => ({ name: key, value: revenueByPlan[key] }));
 
-        console.log("Admin fetching users...");
-        const usersSnap = await getDocs(collection(db, "users"));
-        const usersData = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setUsers(usersData);
-        console.log("Admin fetched users:", usersData.length);
-
-        console.log("Admin fetching payments...");
-        const paymentsSnap = await getDocs(collection(db, "payments"));
-        const paymentsData = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setPayments(paymentsData);
-        console.log("Admin fetched payments:", paymentsData.length);
-
-        console.log("Admin fetching enquiries...");
-        const enquiriesSnap = await getDocs(collection(db, "enquiries"));
-        const enquiriesData = enquiriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setEnquiries(enquiriesData);
-        console.log("Admin fetched enquiries:", enquiriesData.length);
-
-        console.log("Admin fetching plans...");
-        const plansSnap = await getDocs(collection(db, "plans"));
-        const plansData = plansSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setPlans(plansData);
-        console.log("Admin fetched plans:", plansData.length);
-
-        setStats({
-          totalUsers: usersData.length,
-          totalVendors: usersData.filter((u: any) => u.role === "vendor").length,
-          totalBusinesses: bizData.length,
-          pendingApprovals: bizData.filter((b: any) => b.status === "under_review").length,
-          totalRevenue: paymentsData.reduce((acc, p: any) => acc + (p.amount || 0), 0)
-        });
-
-        // Prepare Chart Data
-        const revByPlan = paymentsData.reduce((acc: any, p: any) => {
-          acc[p.planId] = (acc[p.planId] || 0) + (p.amount || 0);
-          return acc;
-        }, {});
-        setRevenueData(Object.keys(revByPlan).map(key => ({ name: key, value: revByPlan[key] })));
-
-        setUserData([
-          { name: 'Vendors', value: usersData.filter((u: any) => u.role === "vendor").length },
-          { name: 'Buyers', value: usersData.filter((u: any) => u.role === "user").length },
-        ]);
-
-      } catch (error) {
-        console.error("Error fetching admin data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [profile]);
+  const userData = [
+    { name: 'Sellers', value: stats.totalSellers },
+    { name: 'Investors', value: users.filter((u: any) => u.role === "user").length },
+  ];
 
   const handleStatusUpdate = async (id: string, status: "approved" | "rejected") => {
     try {
-      const biz = businesses.find(b => b.id === id);
-      const vendor = users.find(u => u.uid === biz.ownerId);
+      const listing = listings.find(l => l.id === id);
+      const seller = users.find(u => u.uid === listing.ownerId);
       const currentFeedback = feedback[id] || "";
 
-      await updateDoc(doc(db, "businesses", id), { 
+      await updateDoc(doc(db, "listings", id), { 
         status,
-        adminFeedback: currentFeedback 
+        adminFeedback: currentFeedback,
+        updatedAt: new Date().toISOString()
       });
 
-      // Send email notification via backend
-      if (vendor?.email) {
-        try {
-          await fetch("/api/admin/notify-listing-status", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              vendorEmail: vendor.email,
-              businessTitle: biz.title,
-              status,
-              feedback: currentFeedback
-            })
-          });
-        } catch (emailErr) {
-          console.error("Failed to send notification email:", emailErr);
-        }
+      // Notify seller (backend call for email)
+      if (seller?.email) {
+        fetch("/api/admin/notify-listing-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            vendorEmail: seller.email,
+            businessTitle: listing.title,
+            status,
+            feedback: currentFeedback
+          })
+        }).catch(err => console.error("Notification failed", err));
       }
-
-      setBusinesses(prev => prev.map(b => b.id === id ? { ...b, status, adminFeedback: currentFeedback } : b));
-      setStats(prev => ({
-        ...prev,
-        pendingApprovals: status === "approved" || status === "rejected" ? prev.pendingApprovals - 1 : prev.pendingApprovals
-      }));
     } catch (error) {
       console.error("Error updating status:", error);
     }
   };
 
-  const handleUserAction = async (userId: string, action: "block" | "delete") => {
-    if (!window.confirm(`Are you sure you want to ${action} this user?`)) return;
+  const handleUserAction = async (userId: string, action: "block" | "activate" | "make_seller" | "make_user") => {
     try {
       if (action === "block") {
-        await updateDoc(doc(db, "users", userId), { isBlocked: true });
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, isBlocked: true } : u));
-      } else {
-        // Delete logic would ideally happen via admin SDK on backend
-        console.log("Delete user:", userId);
+        await updateDoc(doc(db, "users", userId), { status: "blocked" });
+      } else if (action === "activate") {
+        await updateDoc(doc(db, "users", userId), { status: "active" });
+      } else if (action === "make_seller") {
+        await updateDoc(doc(db, "users", userId), { role: "seller" });
+      } else if (action === "make_user") {
+        await updateDoc(doc(db, "users", userId), { role: "user" });
       }
     } catch (error) {
-      console.error(`Error ${action}ing user:`, error);
+      console.error(`Error performing ${action}:`, error);
+    }
+  };
+
+  const handleDeleteListing = async (listingId: string) => {
+    if (!window.confirm("Permanently delete this listing?")) return;
+    try {
+      await deleteDoc(doc(db, "listings", listingId));
+    } catch (error) {
+      console.error("Error deleting listing:", error);
+    }
+  };
+
+  const handleDocumentAction = async (docId: string, status: "verified" | "rejected") => {
+    try {
+      await updateDoc(doc(db, "documents", docId), { status });
+    } catch (error) {
+      console.error("Error verifying document:", error);
     }
   };
 
@@ -182,12 +176,12 @@ export const AdminDashboard = () => {
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
             <Briefcase className="h-6 w-6 text-purple-600 mb-4" />
             <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Total Listings</p>
-            <p className="text-3xl font-black text-[#002366]">{stats.totalBusinesses}</p>
+            <p className="text-3xl font-black text-[#002366]">{stats.totalListings}</p>
           </div>
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
             <TrendingUp className="h-6 w-6 text-yellow-600 mb-4" />
             <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Pending Review</p>
-            <p className="text-3xl font-black text-yellow-600">{stats.pendingApprovals}</p>
+            <p className="text-3xl font-black text-yellow-600">{stats.pendingListings}</p>
           </div>
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
             <DollarSign className="h-6 w-6 text-green-600 mb-4" />
@@ -248,9 +242,9 @@ export const AdminDashboard = () => {
             {[
               { id: "listings", label: "Review Queue", icon: Briefcase },
               { id: "users", label: "User Management", icon: Users },
-              { id: "payments", label: "Payments", icon: DollarSign },
+              { id: "orders", label: "Revenue", icon: DollarSign },
               { id: "enquiries", label: "Enquiries", icon: MessageSquare },
-              { id: "plans", label: "Plans", icon: CreditCard }
+              { id: "documents", label: "Verification", icon: ShieldCheck }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -291,88 +285,50 @@ export const AdminDashboard = () => {
                 <thead>
                   <tr className="bg-gray-50 text-gray-400 text-[10px] uppercase font-bold tracking-widest">
                     <th className="px-8 py-4">Business</th>
-                    <th className="px-8 py-4">Category</th>
-                    <th className="px-8 py-4">Price</th>
-                    <th className="px-8 py-4">Location</th>
                     <th className="px-8 py-4">Status</th>
                     <th className="px-8 py-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {loading ? (
-                    [1, 2, 3].map(i => (
-                      <tr key={i} className="animate-pulse">
-                        <td colSpan={6} className="px-8 py-6 h-16 bg-gray-50/50"></td>
-                      </tr>
-                    ))
-                  ) : businesses.filter(b => 
-                    b.status === "under_review" && 
-                    (b.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                     b.location.toLowerCase().includes(searchTerm.toLowerCase()))
-                  ).map(biz => (
-                    <tr key={biz.id} className="hover:bg-gray-50/50 transition-colors">
+                  {listings.filter(b => 
+                    b.title.toLowerCase().includes(searchTerm.toLowerCase())
+                  ).map(listing => (
+                    <tr key={listing.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
-                          <img 
-                            src={biz.images?.[0] || `https://picsum.photos/seed/${biz.id}/100/100`} 
-                            className="h-12 w-12 rounded-xl object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                          <span className="font-bold text-gray-900">{biz.title}</span>
+                          <img src={listing.images?.[0] || `https://picsum.photos/seed/${listing.id}/100/100`} className="h-12 w-12 rounded-xl object-cover" referrerPolicy="no-referrer" />
+                          <div className="flex flex-col">
+                            <span className="font-bold text-gray-900">{listing.title}</span>
+                            <span className="text-xs text-gray-400">{listing.category} | ₹{listing.price?.toLocaleString()}</span>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-8 py-6 text-sm text-gray-500 font-medium">{biz.category}</td>
-                      <td className="px-8 py-6 font-bold text-[#002366]">₹{biz.price.toLocaleString()}</td>
-                      <td className="px-8 py-6 text-sm text-gray-500">{biz.location}</td>
                       <td className="px-8 py-6">
-                        <span className="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-1 rounded-full">
-                          UNDER REVIEW
+                        <span className={cn(
+                          "text-[10px] font-bold px-3 py-1 rounded-full uppercase",
+                          listing.status === "approved" ? "bg-green-100 text-green-700" :
+                          listing.status === "rejected" ? "bg-red-100 text-red-700" :
+                          "bg-yellow-100 text-yellow-700"
+                        )}>
+                          {listing.status?.replace("_", " ")}
                         </span>
                       </td>
                       <td className="px-8 py-6">
-                        <div className="flex flex-col gap-2">
-                          <textarea
-                            placeholder="Feedback/Reason..."
-                            className="text-xs p-2 border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-[#002366] w-48"
-                            value={feedback[biz.id] || ""}
-                            onChange={(e) => setFeedback({ ...feedback, [biz.id]: e.target.value })}
-                          />
-                          <div className="flex justify-end gap-2">
-                            <button 
-                              onClick={() => handleStatusUpdate(biz.id, "approved")}
-                              className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
-                              title="Approve"
-                            >
-                              <CheckCircle2 className="h-5 w-5" />
-                            </button>
-                            <button 
-                              onClick={() => handleStatusUpdate(biz.id, "rejected")}
-                              className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                              title="Reject"
-                            >
-                              <XCircle className="h-5 w-5" />
-                            </button>
-                            <Link 
-                              to={`/business/${biz.id}`}
-                              className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                              title="View Details"
-                            >
-                              <Eye className="h-5 w-5" />
-                            </Link>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          {listing.status === "under_review" && (
+                            <>
+                              <button onClick={() => handleStatusUpdate(listing.id, "approved")} className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100"><CheckCircle2 className="h-4 w-4" /></button>
+                              <button onClick={() => handleStatusUpdate(listing.id, "rejected")} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100"><XCircle className="h-4 w-4" /></button>
+                            </>
+                          )}
+                          <button onClick={() => handleDeleteListing(listing.id)} className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-600"><XCircle className="h-4 w-4" /></button>
+                          <Link to={`/business/${listing.id}`} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"><Eye className="h-4 w-4" /></Link>
                         </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {!loading && businesses.filter(b => b.status === "under_review").length === 0 && (
-                <div className="p-20 text-center">
-                  <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Queue Clear!</h3>
-                  <p className="text-gray-500">All business listings have been reviewed.</p>
-                </div>
-              )}
             </div>
           )}
 
@@ -383,7 +339,6 @@ export const AdminDashboard = () => {
                   <tr className="bg-gray-50 text-gray-400 text-[10px] uppercase font-bold tracking-widest">
                     <th className="px-8 py-4">User</th>
                     <th className="px-8 py-4">Role</th>
-                    <th className="px-8 py-4">Plan</th>
                     <th className="px-8 py-4">Status</th>
                     <th className="px-8 py-4 text-right">Actions</th>
                   </tr>
@@ -396,45 +351,33 @@ export const AdminDashboard = () => {
                     <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-8 py-6">
                         <div className="flex flex-col">
-                          <span className="font-bold text-gray-900">{user.name || "Unnamed User"}</span>
+                          <span className="font-bold text-gray-900">{user.name}</span>
                           <span className="text-xs text-gray-400">{user.email}</span>
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <span className={cn(
-                          "text-[10px] font-bold px-2 py-1 rounded-full uppercase",
-                          user.role === "admin" ? "bg-purple-100 text-purple-700" : 
-                          user.role === "vendor" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
-                        )}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="px-8 py-6 text-sm text-gray-500">
-                        {user.subscription?.planId || "None"}
+                        <span className="text-[10px] font-bold px-2 py-1 bg-blue-50 text-blue-700 rounded-full uppercase">{user.role}</span>
                       </td>
                       <td className="px-8 py-6">
-                        {user.isBlocked ? (
-                          <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded-full">BLOCKED</span>
-                        ) : (
-                          <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full">ACTIVE</span>
-                        )}
+                        <span className={cn(
+                          "text-[10px] font-bold px-2 py-1 rounded-full uppercase",
+                          user.status === "blocked" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+                        )}>
+                          {user.status || "active"}
+                        </span>
                       </td>
                       <td className="px-8 py-6 text-right">
                         <div className="flex justify-end gap-2">
-                          <button 
-                            onClick={() => handleUserAction(user.id, "block")}
-                            className="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors"
-                            title="Block User"
-                          >
-                            <AlertCircle className="h-5 w-5" />
-                          </button>
-                          <button 
-                            onClick={() => handleUserAction(user.id, "delete")}
-                            className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                            title="Delete User"
-                          >
-                            <XCircle className="h-5 w-5" />
-                          </button>
+                          {user.status !== "blocked" ? (
+                            <button onClick={() => handleUserAction(user.id, "block")} className="text-xs font-bold text-red-600 hover:underline">Block</button>
+                          ) : (
+                            <button onClick={() => handleUserAction(user.id, "activate")} className="text-xs font-bold text-green-600 hover:underline">Unblock</button>
+                          )}
+                          {user.role === "user" ? (
+                            <button onClick={() => handleUserAction(user.id, "make_seller")} className="text-xs font-bold text-blue-600 hover:underline">Promote to Seller</button>
+                          ) : user.role === "seller" && (
+                            <button onClick={() => handleUserAction(user.id, "make_user")} className="text-xs font-bold text-gray-600 hover:underline">Demote to Buyer</button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -444,7 +387,7 @@ export const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === "payments" && (
+          {activeTab === "orders" && (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -453,42 +396,72 @@ export const AdminDashboard = () => {
                     <th className="px-8 py-4">User</th>
                     <th className="px-8 py-4">Plan</th>
                     <th className="px-8 py-4">Amount</th>
-                    <th className="px-8 py-4">Order ID</th>
+                    <th className="px-8 py-4">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {payments
-                    .filter(p => {
-                      const userName = users.find(u => u.id === p.userId)?.name || "";
-                      return userName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                             p.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             p.planId?.toLowerCase().includes(searchTerm.toLowerCase());
-                    })
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .map(payment => (
-                    <tr key={payment.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-8 py-6 text-sm text-gray-500">
-                        {new Date(payment.createdAt).toLocaleDateString()}
-                      </td>
+                  {orders.map(order => (
+                    <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-8 py-6 text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</td>
+                      <td className="px-8 py-6 text-sm font-bold text-gray-900">{users.find(u => u.uid === order.userId)?.name || "User"}</td>
+                      <td className="px-8 py-6 text-xs font-bold text-blue-600">{order.plan}</td>
+                      <td className="px-8 py-6 font-bold text-green-600">₹{order.amount?.toLocaleString()}</td>
                       <td className="px-8 py-6">
-                        <span className="text-sm font-medium text-gray-900">
-                          {users.find(u => u.id === payment.userId)?.name || payment.userId}
+                        <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase">
+                          {order.paymentStatus}
                         </span>
                       </td>
-                      <td className="px-8 py-6">
-                        <span className="bg-blue-50 text-[#002366] text-[10px] font-bold px-2 py-1 rounded-full">
-                          {payment.planId}
-                        </span>
-                      </td>
-                      <td className="px-8 py-6 font-bold text-green-600">₹{payment.amount.toLocaleString()}</td>
-                      <td className="px-8 py-6 text-xs text-gray-400 font-mono">{payment.orderId}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {payments.length === 0 && (
-                <div className="p-20 text-center text-gray-400">No payments recorded yet.</div>
-              )}
+              {orders.length === 0 && <div className="p-20 text-center text-gray-400">No transactions yet.</div>}
+            </div>
+          )}
+
+          {activeTab === "documents" && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-400 text-[10px] uppercase font-bold tracking-widest">
+                    <th className="px-8 py-4">Document</th>
+                    <th className="px-8 py-4">Linked Listing</th>
+                    <th className="px-8 py-4">Status</th>
+                    <th className="px-8 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {documents.map(doc => (
+                    <tr key={doc.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-8 py-6">
+                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          View {doc.type?.replace("_", " ")}
+                        </a>
+                      </td>
+                      <td className="px-8 py-6 text-sm text-gray-500">
+                        {listings.find(l => l.id === doc.listingId)?.title || "Unknown Listing"}
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className={cn(
+                          "text-[10px] font-bold px-2 py-1 rounded-full uppercase",
+                          doc.status === "verified" ? "bg-green-100 text-green-700" :
+                          doc.status === "rejected" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"
+                        )}>
+                          {doc.status || "pending"}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => handleDocumentAction(doc.id, "verified")} className="text-xs font-bold text-green-600 hover:underline">Verify</button>
+                          <button onClick={() => handleDocumentAction(doc.id, "rejected")} className="text-xs font-bold text-red-600 hover:underline">Reject</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {documents.length === 0 && <div className="p-20 text-center text-gray-400">No documents for review.</div>}
             </div>
           )}
 
@@ -498,83 +471,22 @@ export const AdminDashboard = () => {
                 <thead>
                   <tr className="bg-gray-50 text-gray-400 text-[10px] uppercase font-bold tracking-widest">
                     <th className="px-8 py-4">Date</th>
-                    <th className="px-8 py-4">Buyer</th>
+                    <th className="px-8 py-4">Investor</th>
                     <th className="px-8 py-4">Business</th>
                     <th className="px-8 py-4">Message</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {enquiries
-                    .filter(e => {
-                      const userName = users.find(u => u.id === e.userId)?.name || "";
-                      const bizTitle = businesses.find(b => b.id === e.businessId)?.title || "";
-                      return userName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                             bizTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             e.message?.toLowerCase().includes(searchTerm.toLowerCase());
-                    })
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .map(enq => (
+                  {enquiries.map(enq => (
                     <tr key={enq.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-8 py-6 text-sm text-gray-500">
-                        {new Date(enq.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-gray-900">
-                            {users.find(u => u.id === enq.userId)?.name || "Buyer"}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <span className="text-sm text-[#002366] font-medium">
-                          {businesses.find(b => b.id === enq.businessId)?.title || "Business"}
-                        </span>
-                      </td>
-                      <td className="px-8 py-6">
-                        <p className="text-sm text-gray-600 line-clamp-1 italic">"{enq.message}"</p>
-                      </td>
+                      <td className="px-8 py-6 text-sm text-gray-500">{new Date(enq.createdAt).toLocaleDateString()}</td>
+                      <td className="px-8 py-6 font-bold text-gray-900">{users.find(u => u.uid === enq.userId)?.name || "Investor"}</td>
+                      <td className="px-8 py-6 text-[#002366] font-medium">{listings.find(l => l.id === enq.businessId)?.title || "Listing"}</td>
+                      <td className="px-8 py-6 text-sm text-gray-500 italic line-clamp-1">"{enq.message}"</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {enquiries.length === 0 && (
-                <div className="p-20 text-center text-gray-400">No enquiries recorded yet.</div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "plans" && (
-            <div className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {plans.map(plan => (
-                  <div key={plan.id} className="bg-gray-50 rounded-3xl p-8 border border-gray-100 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <CreditCard className="h-16 w-16" />
-                    </div>
-                    <h3 className="text-2xl font-black text-[#002366] mb-2">{plan.name}</h3>
-                    <div className="flex items-baseline gap-1 mb-6">
-                      <span className="text-3xl font-bold text-gray-900">₹{plan.price}</span>
-                      <span className="text-gray-400 text-sm">/month</span>
-                    </div>
-                    <ul className="space-y-4 mb-8">
-                      {plan.features?.map((feature: string, idx: number) => (
-                        <li key={idx} className="flex items-center gap-3 text-sm text-gray-600">
-                          <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                    <button className="w-full py-3 bg-white border border-gray-200 text-[#002366] rounded-xl font-bold hover:bg-gray-100 transition-all">
-                      Edit Plan
-                    </button>
-                  </div>
-                ))}
-              </div>
-              {plans.length === 0 && (
-                <div className="text-center py-20 text-gray-400">
-                  No plans found in database.
-                </div>
-              )}
             </div>
           )}
         </div>

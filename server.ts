@@ -83,7 +83,7 @@ async function seedAdmin() {
       email: adminEmail,
       password: hashedPassword,
       role: "admin",
-      status: "Active",
+      status: "active",
       createdAt: new Date().toISOString()
     });
     console.log("Admin user seeded successfully.");
@@ -189,8 +189,9 @@ async function startServer() {
         email,
         phone,
         password: hashedPassword,
-        role: role || "user",
-        status: "Unverified",
+        role: role || "user", // "user", "seller", "admin"
+        status: "active", // Default to active or use verification flow
+        authProvider: "email",
         createdAt: new Date().toISOString()
       };
 
@@ -427,8 +428,8 @@ async function startServer() {
           name: googleUser.displayName || "Google User",
           email: googleUser.email,
           role: "user",
-          status: "Active",
-          googleConnected: true,
+          status: "active",
+          authProvider: "google",
           profileImage: googleUser.photoURL,
           createdAt: new Date().toISOString()
         };
@@ -441,8 +442,8 @@ async function startServer() {
         userDocId = doc.id;
         userData = doc.data();
         await doc.ref.update({ 
-          googleConnected: true, 
-          status: "Active", 
+          authProvider: "google", 
+          status: "active", 
           profileImage: googleUser.photoURL || userData.profileImage 
         });
       }
@@ -559,12 +560,12 @@ async function startServer() {
     try {
       const db = admin.firestore();
       const usersSnap = await db.collection("users").get();
-      const bizSnap = await db.collection("businesses").get();
+      const listingsSnap = await db.collection("listings").get();
       const paymentsSnap = await db.collection("payments").get();
 
       res.json({
         totalUsers: usersSnap.size,
-        totalBusinesses: bizSnap.size,
+        totalBusinesses: listingsSnap.size,
         totalRevenue: paymentsSnap.docs.reduce((acc, doc) => acc + (doc.data().amount || 0), 0)
       });
     } catch (error: any) {
@@ -583,18 +584,28 @@ async function startServer() {
     }
   });
 
-  app.put("/api/admin/businesses/approve/:id", authenticateToken, adminOnly, async (req, res) => {
+  app.put("/api/admin/listings/approve/:id", authenticateToken, adminOnly, async (req, res) => {
     try {
       const { id } = req.params;
       const { status, feedback } = req.body;
       const db = admin.firestore();
       
-      await db.collection("businesses").doc(id).update({
+      await db.collection("listings").doc(id).update({
         status,
-        adminFeedback: feedback || ""
+        adminFeedback: feedback || "",
+        updatedAt: new Date().toISOString()
+      });
+
+      // Log Review activity
+      await db.collection("reviews").add({
+        listingId: id,
+        status,
+        remarks: feedback || "",
+        adminId: (req as any).user.uid,
+        updatedAt: new Date().toISOString()
       });
       
-      res.json({ message: `Business ${status} successfully` });
+      res.json({ message: `Listing ${status} successfully` });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -647,14 +658,15 @@ async function startServer() {
             }
           });
 
-          // Log payment
-          await db.collection("payments").add({
+          // Log order
+          await db.collection("orders").add({
             userId,
-            planId,
+            listingId: "", // Not always tied to a single listing during generic plan upgrade
+            plan: planId,
             amount: planId === "Silver" ? 999 : planId === "Gold" ? 2499 : 4999,
             orderId: razorpay_order_id,
             paymentId: razorpay_payment_id,
-            status: "success",
+            paymentStatus: "paid",
             createdAt: new Date().toISOString()
           });
         }
@@ -752,7 +764,7 @@ async function startServer() {
           });
           
           // Also hide their listings
-          const listingsSnap = await db.collection("businesses").where("ownerId", "==", userDoc.id).get();
+          const listingsSnap = await db.collection("listings").where("ownerId", "==", userDoc.id).get();
           const batch = db.batch();
           listingsSnap.docs.forEach(doc => {
             batch.update(doc.ref, { status: "expired" });

@@ -58,7 +58,11 @@ export const AddListing = () => {
     if (!user) return;
     setLoading(true);
     try {
-      await addDoc(collection(db, "businesses"), {
+      // Mocked image and doc URLs for simulation
+      const imageUrls = ["https://picsum.photos/seed/biz1/800/600", "https://picsum.photos/seed/biz2/800/600"];
+      const docUrls = ["https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"];
+
+      const listingRef = await addDoc(collection(db, "listings"), {
         ...formData,
         price: Number(formData.price),
         revenue: Number(formData.revenue),
@@ -66,11 +70,28 @@ export const AddListing = () => {
         yearsOfOperation: Number(formData.yearsOfOperation),
         status: "under_review",
         ownerId: user.uid,
-        ownerName: profile?.name || "Verified Vendor",
+        ownerName: profile?.name || "Verified Seller",
         createdAt: new Date().toISOString(),
-        isFeatured: profile?.subscription?.planId === "Platinum",
-        views: 0,
+        planType: profile?.subscription?.planId?.toLowerCase() || "silver",
+        images: imageUrls,
+        analytics: {
+          views: 0,
+          clicks: 0
+        }
       });
+
+      // Create entries in separate documents collection for admin verification
+      for (const url of docUrls) {
+        await addDoc(collection(db, "documents"), {
+          listingId: listingRef.id,
+          userId: user.uid,
+          fileUrl: url,
+          type: "business_proof",
+          status: "pending",
+          createdAt: new Date().toISOString()
+        });
+      }
+
       navigate("/vendor");
     } catch (error) {
       console.error("Error adding listing:", error);
