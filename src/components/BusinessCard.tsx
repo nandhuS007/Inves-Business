@@ -91,39 +91,46 @@ export const BusinessCard: React.FC<{ business: BusinessListing }> = ({ business
       </div>
 
       <div className="p-5">
-        <h3 className="text-lg font-bold text-[#002366] mb-2 line-clamp-1 group-hover:text-blue-700 transition-colors">
+        <div className="flex justify-between items-start mb-3">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold font-mono bg-gray-50 px-2 py-0.5 rounded border border-gray-100 italic">
+            {business.category}
+          </span>
+          <div className="flex items-center gap-1 text-gray-400 text-[10px] font-bold uppercase tracking-wider">
+            <MapPin className="h-3 w-3" />
+            {business.location}
+          </div>
+        </div>
+
+        <h3 className="text-xl font-serif font-bold text-brand-primary mb-4 line-clamp-1 group-hover:text-blue-700 transition-colors leading-tight">
           {business.title}
         </h3>
         
-        <div className="flex items-center gap-1 text-gray-500 text-sm mb-4">
-          <MapPin className="h-4 w-4 text-gray-400" />
-          <span>{business.location}</span>
-        </div>
+        <div className="h-px bg-linear-to-r from-gray-100 via-gray-200 to-gray-100 mb-5"></div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="flex items-end justify-between mb-6">
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Asking Price</span>
-            <div className="flex items-center text-[#002366] font-bold">
-              <IndianRupee className="h-4 w-4" />
-              <span className="text-lg">{business.price.toLocaleString("en-IN")}</span>
+            <span className="text-[9px] uppercase tracking-[0.15em] text-gray-400 font-bold mb-1">Valuation</span>
+            <div className="flex items-baseline text-brand-primary font-serif italic">
+              <span className="text-sm mr-1 mt-0.5">₹</span>
+              <span className="text-2xl font-bold leading-none tracking-tight">{business.price.toLocaleString("en-IN")}</span>
             </div>
           </div>
+          
           <div className="flex flex-col items-end">
-            <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Status</span>
-            <span className={cn(
-              "text-xs font-bold px-2 py-0.5 rounded-full mt-1",
-              business.status === "approved" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
-            )}>
-              {business.status.replace("_", " ")}
-            </span>
+            <span className="text-[9px] uppercase tracking-[0.15em] text-gray-400 font-bold mb-1">Security</span>
+            <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-sm border border-green-100">
+               <TrendingUp className="h-3 w-3" />
+               <span className="text-[10px] font-bold uppercase">Verified</span>
+            </div>
           </div>
         </div>
 
         <Link
           to={`/business/${business.id}`}
-          className="block w-full text-center bg-[#002366] text-white py-2.5 rounded-lg font-semibold hover:bg-[#001a4d] transition-all shadow-sm"
+          className="group/btn relative block w-full text-center py-4 rounded-lg font-bold text-sm tracking-widest uppercase transition-all overflow-hidden border border-brand-primary/10 hover:border-brand-primary/30"
         >
-          View Details
+          <span className="relative z-10 text-brand-primary group-hover/btn:text-white transition-colors">Analyze Asset</span>
+          <div className="absolute inset-0 bg-brand-primary translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
         </Link>
       </div>
     </motion.div>

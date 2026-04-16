@@ -145,79 +145,86 @@ export const BusinessDetails = () => {
           Back to Listings
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
           {/* Left Column: Details */}
-          <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-              <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
-                <div>
-                  <h1 className="text-3xl font-extrabold text-[#002366] mb-2">{business.title}</h1>
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <MapPin className="h-4 w-4" />
+          <div className="lg:col-span-2 space-y-12">
+            <div className="bg-white rounded-[2rem] p-10 shadow-sm border border-gray-100 overflow-hidden relative">
+              <div className="flex flex-wrap justify-between items-start gap-8 mb-10">
+                <div className="flex-1 min-w-[300px]">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/5 border border-brand-primary/10 text-[10px] font-bold tracking-widest uppercase mb-4 text-brand-primary">
+                    Verified Asset
+                  </div>
+                  <h1 className="text-4xl md:text-5xl font-serif font-bold text-brand-primary mb-4 leading-tight tracking-tight">{business.title}</h1>
+                  <div className="flex items-center gap-3 text-gray-400 font-medium">
+                    <MapPin className="h-4 w-4 text-brand-primary/60" />
                     <span>{business.location}</span>
                   </div>
                 </div>
-                <div className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
-                  <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Asking Price</span>
-                  <div className="flex items-center text-2xl font-black text-[#002366]">
-                    <IndianRupee className="h-6 w-6" />
-                    <span>{business.price.toLocaleString("en-IN")}</span>
+                <div className="bg-[#f8f9fa] p-6 rounded-2xl border border-gray-100 min-w-[200px] shadow-sm">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] block mb-2">Acquisition Value</span>
+                  <div className="flex items-baseline text-brand-primary font-serif italic">
+                    <span className="text-xl mr-1 italic">₹</span>
+                    <span className="text-4xl font-bold leading-none">{business.price.toLocaleString("en-IN")}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="aspect-video rounded-2xl overflow-hidden mb-8">
+              <div className="aspect-video rounded-3xl overflow-hidden mb-12 shadow-2xl relative group">
                 <img 
                   src={business.images?.[0] || `https://picsum.photos/seed/${business.id}/1200/800`} 
                   alt={business.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   referrerPolicy="no-referrer"
                 />
+                <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                  <TrendingUp className="h-5 w-5 text-blue-600 mb-2" />
-                  <p className="text-xs text-gray-400 font-bold uppercase">Revenue</p>
-                  <p className="font-bold text-gray-900">₹{business.revenue?.toLocaleString("en-IN") || "N/A"}</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+                <div className="p-6 rounded-2xl bg-[#f8f9fa] border border-gray-100 hover:border-brand-primary/20 transition-colors">
+                  <TrendingUp className="h-5 w-5 text-blue-600 mb-3" />
+                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Revenue</p>
+                  <p className="font-serif font-bold text-brand-primary text-lg italic">₹{business.revenue?.toLocaleString("en-IN") || "N/A"}</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                  <TrendingUp className="h-5 w-5 text-green-600 mb-2" />
-                  <p className="text-xs text-gray-400 font-bold uppercase">Profit</p>
-                  <p className="font-bold text-gray-900">₹{business.profit?.toLocaleString("en-IN") || "N/A"}</p>
+                <div className="p-6 rounded-2xl bg-[#f8f9fa] border border-gray-100 hover:border-brand-primary/20 transition-colors">
+                  <TrendingUp className="h-5 w-5 text-green-600 mb-3" />
+                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Net Profit</p>
+                  <p className="font-serif font-bold text-brand-primary text-lg italic">₹{business.profit?.toLocaleString("en-IN") || "N/A"}</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                  <Calendar className="h-5 w-5 text-purple-600 mb-2" />
-                  <p className="text-xs text-gray-400 font-bold uppercase">Years Active</p>
-                  <p className="font-bold text-gray-900">{business.yearsOfOperation || "N/A"} Years</p>
+                <div className="p-6 rounded-2xl bg-[#f8f9fa] border border-gray-100 hover:border-brand-primary/20 transition-colors">
+                  <Calendar className="h-5 w-5 text-purple-600 mb-3" />
+                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Tenure</p>
+                  <p className="font-serif font-bold text-brand-primary text-lg italic">{business.yearsOfOperation || "N/A"} Years</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                  <ShieldCheck className="h-5 w-5 text-orange-600 mb-2" />
-                  <p className="text-xs text-gray-400 font-bold uppercase">Category</p>
-                  <p className="font-bold text-gray-900">{business.category}</p>
+                <div className="p-6 rounded-2xl bg-[#f8f9fa] border border-gray-100 hover:border-brand-primary/20 transition-colors">
+                  <ShieldCheck className="h-5 w-5 text-orange-600 mb-3" />
+                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Industry</p>
+                  <p className="font-serif font-bold text-brand-primary text-lg italic">{business.category}</p>
                 </div>
               </div>
 
-              <div className="prose max-w-none mb-10">
-                <h3 className="text-xl font-bold text-[#002366] mb-4">Business Description</h3>
-                <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{business.description}</p>
+              <div className="prose max-w-none mb-12">
+                <h3 className="text-xl font-serif font-bold text-brand-primary mb-6 flex items-center gap-3">
+                  <div className="w-8 h-px bg-brand-primary/20"></div>
+                  Asset Portfolio Details
+                </h3>
+                <p className="text-gray-600 leading-[1.8] font-sans text-lg whitespace-pre-wrap">{business.description}</p>
               </div>
 
-              <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="bg-white h-12 w-12 rounded-full flex items-center justify-center text-[#002366] shadow-sm">
-                    <User className="h-6 w-6" />
+              <div className="bg-[#f8f9fa] rounded-2xl p-8 border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
+                <div className="flex items-center gap-6">
+                  <div className="bg-white h-16 w-16 rounded-full flex items-center justify-center text-brand-primary shadow-xl border border-gray-100">
+                    <User className="h-8 w-8" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400 font-bold uppercase">Seller</p>
-                    <p className="font-bold text-gray-900">{business.ownerName || "Verified Vendor"}</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-1">Representative</p>
+                    <p className="text-xl font-serif font-bold text-brand-primary italic">{business.ownerName || "Accredited Vendor"}</p>
                   </div>
                 </div>
                 <Link 
                   to={`/vendor-profile/${business.ownerId}`}
-                  className="text-sm font-bold text-[#002366] hover:underline"
+                  className="px-6 py-3 rounded-xl bg-white border border-gray-200 text-xs font-bold uppercase tracking-widest text-brand-primary hover:bg-brand-primary hover:text-white transition-all shadow-sm"
                 >
-                  View Vendor Profile
+                  View Dossier
                 </Link>
               </div>
 

@@ -106,47 +106,61 @@ export const Pricing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f8f9fa]">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h1 className="text-4xl font-extrabold text-[#002366] mb-4 tracking-tight">Choose Your Growth Plan</h1>
-          <p className="text-xl text-gray-500 font-light">
-            Select the perfect plan to showcase your business to thousands of potential investors.
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-block px-4 py-1.5 rounded-full bg-brand-primary/5 border border-brand-primary/10 text-[10px] font-bold tracking-[0.2em] uppercase mb-6 text-brand-primary"
+          >
+            Transparent Tiering
+          </motion.div>
+          <h1 className="text-5xl md:text-6xl font-serif font-bold text-brand-primary mb-6 leading-tight">Elevate Your <span className="italic text-gray-400">Market Presence</span></h1>
+          <p className="text-xl text-gray-500 font-sans leading-relaxed">
+            Professional-grade tools and visibility for serious business transactions. Choose the tier that matches your objective.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-stretch">
           {plans.map((plan) => (
             <motion.div
               key={plan.id}
-              whileHover={{ y: -10 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -5 }}
               className={cn(
-                "bg-white rounded-3xl p-8 shadow-xl border-2 transition-all relative overflow-hidden flex flex-col",
-                plan.popular ? "border-[#002366] scale-105 z-10" : "border-transparent"
+                "bg-white rounded-3xl p-10 border transition-all relative overflow-hidden flex flex-col h-full",
+                plan.popular ? "border-brand-primary shadow-2xl scale-[1.02] z-10" : "border-gray-100 shadow-sm hover:shadow-xl"
               )}
             >
               {plan.popular && (
-                <div className="absolute top-0 right-0 bg-[#002366] text-white px-4 py-1 text-[10px] font-black uppercase tracking-widest rounded-bl-xl">
-                  Most Popular
+                <div className="absolute top-0 right-0 bg-brand-primary text-white px-5 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-bl-xl shadow-lg">
+                  Most Requested
                 </div>
               )}
 
-              <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center mb-6", plan.color)}>
-                <plan.icon className={cn("h-8 w-8", plan.textColor)} />
+              <div className="mb-10">
+                <div className={cn("h-16 w-16 rounded-2xl flex items-center justify-center mb-8 shadow-sm", plan.color)}>
+                  <plan.icon className={cn("h-8 w-8", plan.textColor)} />
+                </div>
+                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">{plan.name}</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-5xl font-serif font-bold text-brand-primary leading-none tracking-tighter">₹{plan.price}</span>
+                  <span className="text-gray-400 font-bold text-sm tracking-wider uppercase ml-2">/ month</span>
+                </div>
               </div>
 
-              <h3 className="text-2xl font-black text-gray-900 mb-2">{plan.name}</h3>
-              <div className="flex items-baseline gap-1 mb-8">
-                <span className="text-4xl font-black text-[#002366]">₹{plan.price}</span>
-                <span className="text-gray-400 font-bold">/month</span>
-              </div>
+              <div className="h-px bg-linear-to-r from-gray-50 via-gray-200 to-gray-50 mb-10"></div>
 
-              <ul className="space-y-4 mb-10 flex-1">
+              <ul className="space-y-5 mb-12 flex-1">
                 {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-sm text-gray-600 font-medium">
-                    <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+                  <li key={idx} className="flex items-start gap-4 text-[13px] text-gray-600 font-medium leading-relaxed">
+                    <div className="mt-1">
+                      <CheckCircle2 className="h-4 w-4 text-brand-primary shrink-0" />
+                    </div>
                     {feature}
                   </li>
                 ))}
@@ -156,14 +170,22 @@ export const Pricing = () => {
                 onClick={() => handlePayment(plan)}
                 disabled={loading !== null}
                 className={cn(
-                  "w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg",
+                  "group relative w-full py-5 rounded-xl font-bold text-xs uppercase tracking-[0.2em] transition-all overflow-hidden border",
                   plan.popular 
-                    ? "bg-[#002366] text-white hover:bg-[#001a4d]" 
-                    : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+                    ? "bg-brand-primary text-white border-brand-primary hover:bg-black" 
+                    : "bg-white text-brand-primary border-brand-primary/20 hover:border-brand-primary/40"
                 )}
               >
-                {loading === plan.id ? "Processing..." : `Get Started with ${plan.name}`}
-                {loading !== plan.id && <ArrowRight className="h-4 w-4" />}
+                <div className="relative z-10 flex items-center justify-center gap-3">
+                  {loading === plan.id ? (
+                    <span className="animate-pulse">Processing...</span>
+                  ) : (
+                    <>
+                      Secure {plan.name}
+                      <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </div>
               </button>
             </motion.div>
           ))}

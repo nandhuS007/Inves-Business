@@ -15,53 +15,57 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <nav className="glass-morphism sticky top-0 z-50 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-20">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2">
-              <Briefcase className="h-8 w-8 text-[#002366]" />
-              <span className="text-xl font-bold text-[#002366] tracking-tight">Inves4Business</span>
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="bg-brand-primary p-1.5 rounded-lg shadow-lg group-hover:scale-110 transition-transform">
+                <Briefcase className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-2xl font-serif font-bold text-brand-primary tracking-tight">Inves4Business</span>
             </Link>
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-600 hover:text-[#002366] font-medium transition-colors">Browse</Link>
+          <div className="hidden md:flex items-center space-x-10">
+            <Link to="/" className="text-[13px] font-bold uppercase tracking-widest text-gray-500 hover:text-brand-primary transition-colors">Browse</Link>
             {user ? (
               <>
                 {profile?.role === "user" && (
-                  <Link to="/buyer" className="text-gray-600 hover:text-[#002366] font-medium transition-colors">My Enquiries</Link>
+                  <Link to="/buyer" className="text-[13px] font-bold uppercase tracking-widest text-gray-500 hover:text-brand-primary transition-colors">Enquiries</Link>
                 )}
                 {profile?.role === "vendor" && (
-                  <Link to="/vendor" className="text-gray-600 hover:text-[#002366] font-medium transition-colors">Vendor Panel</Link>
+                  <Link to="/vendor" className="text-[13px] font-bold uppercase tracking-widest text-gray-500 hover:text-brand-primary transition-colors">Vendor Kit</Link>
                 )}
                 {profile?.role === "admin" && (
-                  <Link to="/admin" className="text-gray-600 hover:text-[#002366] font-medium transition-colors">Admin Panel</Link>
+                  <Link to="/admin" className="text-[13px] font-bold uppercase tracking-widest text-gray-500 hover:text-brand-primary transition-colors">Control</Link>
                 )}
-                <Link to="/messages" className="text-gray-600 hover:text-[#002366] font-medium transition-colors relative">
+                <Link to="/messages" className="text-[13px] font-bold uppercase tracking-widest text-gray-500 hover:text-brand-primary transition-colors relative">
                   Messages
                 </Link>
-                <div className="flex items-center gap-4">
-                  <Link to="/profile" className="flex items-center gap-2 text-sm text-gray-700 hover:text-[#002366] transition-colors">
-                    <User className="h-4 w-4" />
-                    <span>{profile?.name || user.email}</span>
+                <div className="flex items-center gap-6 pl-4 border-l border-gray-100">
+                  <Link to="/profile" className="flex items-center gap-2 group/user p-1">
+                    <div className="w-8 h-8 rounded-full bg-brand-primary/5 flex items-center justify-center group-hover/user:bg-brand-primary/10 transition-colors">
+                      <User className="h-4 w-4 text-brand-primary" />
+                    </div>
+                    <span className="text-[13px] font-bold text-gray-900 group-hover/user:text-brand-primary transition-colors">{profile?.name || user.email}</span>
                   </Link>
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+                    className="flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                    title="Sign Out"
                   >
                     <LogOut className="h-4 w-4" />
-                    Sign Out
                   </button>
                 </div>
               </>
             ) : (
-              <div className="flex items-center gap-4">
-                <Link to="/login" className="text-gray-600 hover:text-[#002366] font-medium transition-colors">Login</Link>
+              <div className="flex items-center gap-6">
+                <Link to="/login" className="text-[13px] font-bold uppercase tracking-widest text-gray-500 hover:text-brand-primary transition-colors">Access</Link>
                 <Link
                   to="/register"
-                  className="bg-[#002366] text-white px-5 py-2 rounded-lg font-semibold hover:bg-[#001a4d] transition-all shadow-sm"
+                  className="bg-brand-primary text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
                 >
                   Register
                 </Link>

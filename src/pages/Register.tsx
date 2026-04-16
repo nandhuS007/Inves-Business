@@ -72,19 +72,21 @@ export const Register = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col justify-center py-20 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to="/" className="flex justify-center items-center gap-2 mb-6">
-          <Briefcase className="h-10 w-10 text-[#002366]" />
-          <span className="text-2xl font-bold text-[#002366]">Inves4Business</span>
+        <Link to="/" className="flex justify-center items-center gap-3 mb-10 group transition-all">
+          <div className="bg-brand-primary p-2 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+             <Briefcase className="h-8 w-8 text-white" />
+          </div>
+          <span className="text-3xl font-serif font-bold text-brand-primary tracking-tight italic">Inves4Business</span>
         </Link>
-        <h2 className="text-center text-3xl font-extrabold text-gray-900 tracking-tight">
-          Create your account
+        <h2 className="text-center text-4xl font-serif font-bold text-brand-primary tracking-tight">
+          Create <span className="italic text-gray-400">Profile</span>
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <Link to="/login" className="font-medium text-[#002366] hover:text-blue-700">
-            Sign in here
+        <p className="mt-3 text-center text-sm text-gray-500 font-medium">
+          Already registered?{" "}
+          <Link to="/login" className="font-bold text-brand-primary hover:underline underline-offset-4">
+            Initialize access
           </Link>
         </p>
       </div>
@@ -92,118 +94,132 @@ export const Register = () => {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
+        className="mt-10 sm:mx-auto sm:w-full sm:max-w-md"
       >
-        <div className="bg-white py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-100">
-          <form className="space-y-4" onSubmit={handleRegister}>
+        <div className="bg-white py-12 px-6 shadow-2xl shadow-brand-primary/5 sm:rounded-[2rem] sm:px-12 border border-gray-100">
+          <form className="space-y-6" onSubmit={handleRegister}>
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-400 mt-0.5" />
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start gap-3"
+              >
+                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                <p className="text-sm font-medium text-red-700">{error}</p>
+              </motion.div>
             )}
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-8">
               <button
                 type="button"
                 onClick={() => setRole("user")}
                 className={cn(
-                  "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
-                  role === "user" ? "border-[#002366] bg-blue-50" : "border-gray-100 hover:border-gray-200"
+                  "flex flex-col items-center gap-3 p-5 rounded-2xl border transition-all",
+                  role === "user" ? "border-brand-primary bg-brand-primary/5 ring-1 ring-brand-primary" : "border-gray-100 bg-gray-50/50 hover:border-gray-200"
                 )}
               >
-                <User className={cn("h-6 w-6", role === "user" ? "text-[#002366]" : "text-gray-400")} />
-                <span className={cn("text-xs font-bold", role === "user" ? "text-[#002366]" : "text-gray-500")}>Buyer</span>
+                <User className={cn("h-6 w-6", role === "user" ? "text-brand-primary" : "text-gray-400")} />
+                <span className={cn("text-[10px] font-bold uppercase tracking-widest", role === "user" ? "text-brand-primary" : "text-gray-500")}>Acquirer</span>
               </button>
               <button
                 type="button"
                 onClick={() => setRole("vendor")}
                 className={cn(
-                  "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
-                  role === "vendor" ? "border-[#002366] bg-blue-50" : "border-gray-100 hover:border-gray-200"
+                  "flex flex-col items-center gap-3 p-5 rounded-2xl border transition-all",
+                  role === "vendor" ? "border-brand-primary bg-brand-primary/5 ring-1 ring-brand-primary" : "border-gray-100 bg-gray-50/50 hover:border-gray-200"
                 )}
               >
-                <Briefcase className={cn("h-6 w-6", role === "vendor" ? "text-[#002366]" : "text-gray-400")} />
-                <span className={cn("text-xs font-bold", role === "vendor" ? "text-[#002366]" : "text-gray-500")}>Vendor</span>
+                <Briefcase className={cn("h-6 w-6", role === "vendor" ? "text-brand-primary" : "text-gray-400")} />
+                <span className={cn("text-[10px] font-bold uppercase tracking-widest", role === "vendor" ? "text-brand-primary" : "text-gray-500")}>Provider</span>
               </button>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
+            <div className="space-y-5">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2 pl-1">Full Name</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-300 group-focus-within:text-brand-primary transition-colors" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    className="block w-full pl-12 pr-4 py-4 border border-gray-100 rounded-2xl bg-gray-50/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:bg-white transition-all text-sm"
+                    placeholder="Institutional Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
                 </div>
-                <input
-                  type="text"
-                  required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#002366] focus:border-[#002366] sm:text-sm transition-all"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2 pl-1">Email Address</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-300 group-focus-within:text-brand-primary transition-colors" />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    className="block w-full pl-12 pr-4 py-4 border border-gray-100 rounded-2xl bg-gray-50/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:bg-white transition-all text-sm"
+                    placeholder="email@institutional.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2 pl-1">Contact Intelligence</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Phone className="h-5 w-5 text-gray-300 group-focus-within:text-brand-primary transition-colors" />
+                  </div>
+                  <input
+                    type="tel"
+                    required
+                    className="block w-full pl-12 pr-4 py-4 border border-gray-100 rounded-2xl bg-gray-50/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:bg-white transition-all text-sm"
+                    placeholder="+91 XXXXX XXXXX"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2 pl-1">Passphrase</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-300 group-focus-within:text-brand-primary transition-colors" />
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    className="block w-full pl-12 pr-4 py-4 border border-gray-100 rounded-2xl bg-gray-50/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:bg-white transition-all text-sm"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Email Address</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="email"
-                  required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#002366] focus:border-[#002366] sm:text-sm transition-all"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Phone Number</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="tel"
-                  required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#002366] focus:border-[#002366] sm:text-sm transition-all"
-                  placeholder="+91 98765 43210"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Password</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#002366] focus:border-[#002366] sm:text-sm transition-all"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="pt-2">
+            <div className="pt-6">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-[#002366] hover:bg-[#001a4d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002366] transition-all disabled:opacity-50"
+                className="group relative w-full flex justify-center items-center gap-3 py-5 px-4 rounded-2xl shadow-xl shadow-brand-primary/10 text-xs font-bold uppercase tracking-[0.2em] text-white bg-brand-primary hover:bg-black transition-all disabled:opacity-50 active:scale-95"
               >
-                {loading ? "Creating account..." : "Create Account"}
-                {!loading && <ArrowRight className="h-4 w-4" />}
+                <div className="relative z-10 flex items-center gap-3">
+                  {loading ? (
+                    <span className="animate-pulse">Provisioning...</span>
+                  ) : (
+                    <>
+                      Register Profile
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </div>
               </button>
             </div>
           </form>

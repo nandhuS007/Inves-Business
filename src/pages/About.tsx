@@ -10,23 +10,30 @@ export const About = () => {
       
       <main>
         {/* Hero */}
-        <section className="bg-[#002366] text-white py-24 relative overflow-hidden">
+        <section className="bg-brand-primary text-white pt-40 pb-32 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
           <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-block px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[10px] font-bold tracking-[0.2em] uppercase mb-8 text-blue-300"
+            >
+              Our Philosophy
+            </motion.div>
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl font-extrabold mb-6"
+              className="text-6xl md:text-8xl font-serif font-bold mb-8 leading-none"
             >
-              Our Mission
+              Architecting <span className="italic text-blue-300">Equity</span>
             </motion.h1>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-xl text-blue-100 max-w-3xl mx-auto font-light"
+              className="text-xl text-blue-100/70 max-w-2xl mx-auto font-sans leading-relaxed"
             >
-              To empower entrepreneurs and investors by providing the most transparent, 
-              secure, and efficient marketplace for business transitions.
+              We empower the next generation of industrial leaders by curating high-performance assets and facilitating seamless transitions of power.
             </motion.p>
           </div>
         </section>

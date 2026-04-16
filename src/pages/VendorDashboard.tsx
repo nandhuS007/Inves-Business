@@ -4,7 +4,7 @@ import { db } from "../lib/firebase";
 import { useAuth } from "../context/AuthContext";
 import { Navbar } from "../components/Navbar";
 import { Link } from "react-router-dom";
-import { Plus, Briefcase, MessageSquare, CreditCard, AlertCircle, CheckCircle2, Edit3, Trash2, TrendingUp, User, Send } from "lucide-react";
+import { Plus, Briefcase, MessageSquare, CreditCard, AlertCircle, CheckCircle2, Edit3, Trash2, TrendingUp, User, Send, Calendar } from "lucide-react";
 import { motion } from "motion/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "../lib/utils";
@@ -79,69 +79,91 @@ export const VendorDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-          <div>
-            <h1 className="text-3xl font-extrabold text-[#002366] mb-2">Vendor Dashboard</h1>
-            <p className="text-gray-500">Manage your business listings and track enquiries.</p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="flex flex-col md:flex-row justify-between items-end gap-12 mb-16">
+          <div className="flex-1">
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/5 border border-brand-primary/10 text-[10px] font-bold tracking-widest uppercase mb-4 text-brand-primary"
+            >
+              Professional Interface
+            </motion.div>
+            <h1 className="text-4xl md:text-5xl font-serif font-bold text-brand-primary mb-4 leading-tight tracking-tight">Vendor Management <span className="italic text-gray-400">Hub</span></h1>
+            <p className="text-gray-500 font-sans max-w-xl text-lg leading-relaxed">Oversee your assets, monitor potential acquisitions, and coordinate through our secure communication channel.</p>
           </div>
-          <div className="flex items-center gap-4">
+          
+          <div className="flex flex-wrap items-center gap-4">
             <Link
               to="/profile"
-              className="flex items-center gap-2 bg-white text-[#002366] px-6 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all border border-gray-200 shadow-sm"
+              className="group flex items-center gap-3 bg-white text-gray-900 px-6 py-4 rounded-xl font-bold border border-gray-200 shadow-sm hover:border-brand-primary/20 transition-all active:scale-95"
             >
-              <User className="h-5 w-5" />
-              Edit Profile
+              <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-brand-primary/5 transition-colors">
+                <User className="h-4 w-4 text-gray-500 group-hover:text-brand-primary" />
+              </div>
+              <span className="text-sm">Account Matrix</span>
             </Link>
             <Link
               to="/add-listing"
-              className="flex items-center gap-2 bg-[#002366] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#001a4d] transition-all shadow-lg"
+              className="flex items-center gap-3 bg-brand-primary text-white px-8 py-4 rounded-xl font-bold shadow-xl shadow-brand-primary/10 hover:bg-black transition-all active:scale-95"
             >
               <Plus className="h-5 w-5" />
-              Add New Listing
+              <span className="text-sm uppercase tracking-widest font-bold">New Asset</span>
             </Link>
           </div>
         </div>
 
-        {/* Subscription Status */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          <div className="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="flex items-center gap-6">
-              <div className="bg-blue-50 p-4 rounded-2xl">
-                <CreditCard className="h-8 w-8 text-[#002366]" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Subscription Status</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  {subscriptionActive ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      <span className="text-sm font-bold text-green-600">Active - {profile?.subscription?.planId} Plan</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="h-4 w-4 text-yellow-500" />
-                      <span className="text-sm font-bold text-yellow-600">No Active Subscription</span>
-                    </>
-                  )}
+        {/* Global Statistics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-xs group hover:border-brand-primary/10 transition-colors">
+             <div className="flex justify-between items-start mb-6">
+                <div className="p-3 rounded-xl bg-blue-50 text-brand-primary group-hover:scale-110 transition-transform">
+                  <Briefcase className="h-5 w-5" />
                 </div>
-              </div>
-            </div>
-            {!subscriptionActive && (
-              <Link
-                to="/pricing"
-                className="bg-[#002366] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#001a4d] transition-all"
-              >
-                Upgrade Plan
-              </Link>
-            )}
+                <div className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-1 rounded">HEALTHY</div>
+             </div>
+             <div className="text-3xl font-serif font-bold text-brand-primary mb-1">{listings.length}</div>
+             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Listings</div>
           </div>
 
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4">Total Enquiries</h3>
-            <div className="flex items-end gap-2">
-              <span className="text-4xl font-black text-[#002366]">{enquiries.length}</span>
-              <span className="text-sm text-green-500 font-bold mb-1">+12%</span>
+          <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-xs group hover:border-brand-primary/10 transition-colors">
+             <div className="flex justify-between items-start mb-6">
+                <div className="p-3 rounded-xl bg-orange-50 text-orange-600 group-hover:scale-110 transition-transform">
+                  <MessageSquare className="h-5 w-5" />
+                </div>
+                <div className="text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded">PENDING</div>
+             </div>
+             <div className="text-3xl font-serif font-bold text-brand-primary mb-1">{enquiries.length}</div>
+             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Inquiries</div>
+          </div>
+
+          <div className="md:col-span-2 bg-brand-primary text-white rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 h-full">
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-blue-300 mb-2">Member Tier</div>
+                <h3 className="text-2xl font-serif font-bold mb-4">{profile?.subscription?.planId || 'Standard'} Intelligence</h3>
+                <div className="flex items-center gap-4 text-xs font-medium text-white/70">
+                   <div className="flex items-center gap-1.5 px-2 py-1 bg-white/10 rounded">
+                      <CreditCard className="h-3 w-3" />
+                      {subscriptionActive ? 'Subscription Active' : 'No Active Plan'}
+                   </div>
+                   {subscriptionActive && (
+                     <div className="flex items-center gap-1.5 px-2 py-1 bg-white/10 rounded">
+                       <Calendar className="h-3 w-3" />
+                       Renew: {new Date(profile.subscription.expiryDate).toLocaleDateString()}
+                     </div>
+                   )}
+                </div>
+              </div>
+              {!subscriptionActive && (
+                <Link
+                  to="/pricing"
+                  className="bg-white text-brand-primary px-8 py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all shadow-xl shadow-brand-primary/20"
+                >
+                  Acquire Access
+                </Link>
+              )}
             </div>
           </div>
         </div>

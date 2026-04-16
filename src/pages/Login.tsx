@@ -39,19 +39,21 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to="/" className="flex justify-center items-center gap-2 mb-6">
-          <Briefcase className="h-10 w-10 text-[#002366]" />
-          <span className="text-2xl font-bold text-[#002366]">Inves4Business</span>
+        <Link to="/" className="flex justify-center items-center gap-3 mb-10 group transition-all">
+          <div className="bg-brand-primary p-2 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+             <Briefcase className="h-8 w-8 text-white" />
+          </div>
+          <span className="text-3xl font-serif font-bold text-brand-primary tracking-tight italic">Inves4Business</span>
         </Link>
-        <h2 className="text-center text-3xl font-extrabold text-gray-900 tracking-tight">
-          Welcome back
+        <h2 className="text-center text-4xl font-serif font-bold text-brand-primary tracking-tight">
+          Secure <span className="italic text-gray-400">Access</span>
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-3 text-center text-sm text-gray-500 font-medium">
           Or{" "}
-          <Link to="/register" className="font-medium text-[#002366] hover:text-blue-700">
-            create a new account
+          <Link to="/register" className="font-bold text-brand-primary hover:underline underline-offset-4">
+            create a new investment profile
           </Link>
         </p>
       </div>
@@ -59,67 +61,73 @@ export const Login = () => {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
+        className="mt-10 sm:mx-auto sm:w-full sm:max-w-md"
       >
-        <div className="bg-white py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-100">
-          <form className="space-y-6" onSubmit={handleLogin}>
+        <div className="bg-white py-12 px-6 shadow-2xl shadow-brand-primary/5 sm:rounded-[2rem] sm:px-12 border border-gray-100">
+          <form className="space-y-8" onSubmit={handleLogin}>
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-400 mt-0.5" />
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start gap-3"
+              >
+                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                <p className="text-sm font-medium text-red-700">{error}</p>
+              </motion.div>
             )}
 
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Email Address</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+            <div className="space-y-6">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2 pl-1">Identification</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-300 group-focus-within:text-brand-primary transition-colors" />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    className="block w-full pl-12 pr-4 py-4 border border-gray-100 rounded-2xl bg-gray-50/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:bg-white transition-all text-sm"
+                    placeholder="email@institutional.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
-                <input
-                  type="email"
-                  required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#002366] focus:border-[#002366] sm:text-sm transition-all"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2 pl-1">Passphrase</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-300 group-focus-within:text-brand-primary transition-colors" />
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    className="block w-full pl-12 pr-4 py-4 border border-gray-100 rounded-2xl bg-gray-50/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:bg-white transition-all text-sm"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Password</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#002366] focus:border-[#002366] sm:text-sm transition-all"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between px-1">
               <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-[#002366] focus:ring-[#002366] border-gray-300 rounded"
+                  className="h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-200 rounded cursor-pointer"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Remember me
+                <label htmlFor="remember-me" className="ml-2 block text-xs font-bold text-gray-500 cursor-pointer uppercase tracking-wider">
+                  Persistent
                 </label>
               </div>
 
-              <div className="text-sm">
-                <Link to="/forgot-password" title="Go to Forgot Password" className="font-medium text-[#002366] hover:text-blue-700">
-                  Forgot password?
+              <div className="text-xs">
+                <Link to="/forgot-password" title="Go to Forgot Password" className="font-bold text-brand-primary hover:underline underline-offset-4 uppercase tracking-wider">
+                  Recover Access
                 </Link>
               </div>
             </div>
@@ -127,10 +135,18 @@ export const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-[#002366] hover:bg-[#001a4d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002366] transition-all disabled:opacity-50"
+              className="group relative w-full flex justify-center items-center gap-3 py-5 px-4 rounded-2xl shadow-xl shadow-brand-primary/10 text-xs font-bold uppercase tracking-[0.2em] text-white bg-brand-primary hover:bg-black transition-all disabled:opacity-50 active:scale-95"
             >
-              {loading ? "Signing in..." : "Sign in"}
-              {!loading && <ArrowRight className="h-4 w-4" />}
+              <div className="relative z-10 flex items-center gap-3">
+                {loading ? (
+                  <span className="animate-pulse">Authenticating...</span>
+                ) : (
+                  <>
+                    Initialize Session
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </div>
             </button>
           </form>
         </div>
