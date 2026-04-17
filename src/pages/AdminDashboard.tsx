@@ -4,9 +4,10 @@ import { db } from "../lib/firebase";
 import { useAuth } from "../context/AuthContext";
 import { Navbar } from "../components/Navbar";
 import { Link } from "react-router-dom";
-import { ShieldCheck, Users, Briefcase, CheckCircle2, XCircle, Eye, TrendingUp, DollarSign, MessageSquare, AlertCircle, CreditCard, Search } from "lucide-react";
+import { ShieldCheck, Users, Briefcase, CheckCircle2, XCircle, Eye, TrendingUp, DollarSign, MessageSquare, AlertCircle, CreditCard, Search, Settings } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
+import { EnvSettingsModal } from "../components/EnvSettingsModal";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, LineChart, Line, Legend 
@@ -23,6 +24,7 @@ export const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<{ [key: string]: string }>({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [isEnvModalOpen, setIsEnvModalOpen] = useState(false);
 
   // Real-time Listeners
   useEffect(() => {
@@ -163,6 +165,15 @@ export const AdminDashboard = () => {
           <div>
             <h1 className="text-3xl font-extrabold text-[#002366]">Admin Command Center</h1>
             <p className="text-gray-500">Oversee marketplace operations and approvals.</p>
+          </div>
+          <div className="ml-auto">
+            <button 
+              onClick={() => setIsEnvModalOpen(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 rounded-2xl font-bold text-gray-700 shadow-sm hover:shadow-md transition-all hover:bg-gray-50"
+            >
+              <Settings className="h-5 w-5 text-[#002366]" />
+              Platform Settings
+            </button>
           </div>
         </div>
 
@@ -491,6 +502,11 @@ export const AdminDashboard = () => {
           )}
         </div>
       </main>
+
+      <EnvSettingsModal 
+        isOpen={isEnvModalOpen} 
+        onClose={() => setIsEnvModalOpen(false)} 
+      />
     </div>
   );
 };
