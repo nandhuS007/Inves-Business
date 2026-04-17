@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --target=node20 --outfile=dist/server.js --format=esm --external:vite --external:express --external:firebase-admin --external:helmet --external:compression --external:razorpay --external:nodemailer --external:bcryptjs --external:jsonwebtoken",
-    "start": "NODE_ENV=production node dist/server.js",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --target=node20 --outfile=production_build/server.js --format=esm --external:vite --external:express --external:firebase-admin --external:helmet --external:compression --external:razorpay --external:nodemailer --external:bcryptjs --external:jsonwebtoken",
+    "start": "NODE_ENV=production node production_build/server.js",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"

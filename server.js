@@ -6,11 +6,11 @@ import { existsSync, readdirSync } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-console.log('--- Hostinger Production Bridge (V7 - Pre-Built) ---');
-const builtServer = join(__dirname, 'dist', 'server.js');
+console.log('--- Hostinger Production Bridge (V9 - Production Build Dir) ---');
+const builtServer = join(__dirname, 'production_build', 'server.js');
 
 if (existsSync(builtServer)) {
-    console.log('Startup: Found pre-built server at', builtServer);
+    console.log('Startup: Found compiled server at', builtServer);
     const child = spawn(process.execPath, [builtServer], {
         stdio: 'inherit',
         cwd: __dirname,

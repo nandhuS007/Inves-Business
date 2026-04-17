@@ -1,6 +1,8 @@
 node_modules/
 build/
 # dist/ - Removed from ignore for direct deployment
+# production_build/ - Included for Hostinger deployment
+!production_build/
 coverage/
 .DS_Store
 *.log
