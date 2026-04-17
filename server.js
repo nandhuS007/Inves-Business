@@ -16,9 +16,13 @@ if (existsSync(builtServer)) {
         cwd: __dirname,
         env: { ...process.env, NODE_ENV: 'production' }
     });
+
+    child.on('error', (err) => {
+        console.error('CRITICAL: Failed to spawn child process:', err);
+    });
+
     child.on('close', (code) => {
         console.log(`Server exited with code ${code}`);
-        // No auto-restart here to prevent loops if it's a code error
     });
 } else {
     console.error('CRITICAL: dist/server.js not found in deployment package.');
