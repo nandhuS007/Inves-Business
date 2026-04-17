@@ -6,11 +6,11 @@ import { existsSync, readdirSync } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-console.log('--- Hostinger Production Bridge (V9 - Production Build Dir) ---');
-const builtServer = join(__dirname, 'production_build', 'server.js');
+console.log('--- Hostinger Production Bridge (V10 - Final Root) ---');
+const builtServer = join(__dirname, 'server_compiled.js');
 
 if (existsSync(builtServer)) {
-    console.log('Startup: Found compiled server at', builtServer);
+    console.log('Startup: Found root compiled server at', builtServer);
     const child = spawn(process.execPath, [builtServer], {
         stdio: 'inherit',
         cwd: __dirname,
@@ -25,6 +25,6 @@ if (existsSync(builtServer)) {
         console.log(`Server exited with code ${code}`);
     });
 } else {
-    console.error('CRITICAL: dist/server.js not found in deployment package.');
+    console.error('CRITICAL: server_compiled.js not found in deployment package.');
     console.log('Contents of CWD:', readdirSync(__dirname));
 }
