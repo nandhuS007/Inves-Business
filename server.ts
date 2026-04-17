@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import { readFileSync, existsSync } from "fs";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import dotenv from "dotenv";
@@ -11,7 +12,24 @@ import jwt from "jsonwebtoken";
 import helmet from "helmet";
 import compression from "compression";
 
-import firebaseConfig from "./firebase-applet-config.json";
+// 1. SAFE STARTUP LOGS
+console.log('>>> [MASTER_SERVER] BOOTING...');
+console.log('>>> Node Version:', process.version);
+console.log('>>> CWD:', process.cwd());
+
+// 2. SAFE JSON IMPORT FOR ESM
+let firebaseConfig: any = {};
+try {
+  const configPath = new URL("./firebase-applet-config.json", import.meta.url);
+  if (existsSync(configPath)) {
+    firebaseConfig = JSON.parse(readFileSync(configPath, "utf-8"));
+    console.log('>>> Firebase Config Loaded Successfully');
+  } else {
+    console.warn('>>> WARNING: firebase-applet-config.json not found!');
+  }
+} catch (err: any) {
+  console.error('>>> CRITICAL: Failed to load firebase-applet-config.json', err.message);
+}
 
 dotenv.config();
 
