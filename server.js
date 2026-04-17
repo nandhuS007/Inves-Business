@@ -1,17 +1,22 @@
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync, readdirSync, statSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-console.log('--- Hostinger Production Bridge (V11 - Log Capture) ---');
+console.log('--- Hostinger Production Bridge (V12 - Pre-Flight) ---');
 const builtServer = join(__dirname, 'server_compiled.js');
 
 if (existsSync(builtServer)) {
-    console.log('Startup: Found root compiled server at', builtServer);
+    const stats = statSync(builtServer);
+    console.log(`Startup: Found root compiled server at ${builtServer} (${stats.size} bytes)`);
     
+    if (stats.size < 1000) {
+        console.warn('WARNING: server_compiled.js seems too small. Build might have failed.');
+    }
+
     const child = spawn(process.execPath, [builtServer], {
         cwd: __dirname,
         env: { ...process.env, NODE_ENV: 'production' }
