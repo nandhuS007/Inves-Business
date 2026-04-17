@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --target=node20 --outfile=server_compiled.js --format=esm --external:vite",
-    "start": "NODE_ENV=production node server_compiled.js",
+    "build": "vite build && esbuild server.ts --bundle --minify --platform=node --target=node20 --outfile=master_server.js --format=esm --external:vite",
+    "start": "NODE_ENV=production node master_server.js",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"

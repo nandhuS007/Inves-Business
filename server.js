@@ -6,12 +6,12 @@ import { existsSync, readdirSync, statSync } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-console.log('--- Hostinger Production Bridge (V12 - Pre-Flight) ---');
-const builtServer = join(__dirname, 'server_compiled.js');
+console.log('--- Hostinger Production Bridge (V13 - Master Bundle) ---');
+const builtServer = join(__dirname, 'master_server.js');
 
 if (existsSync(builtServer)) {
     const stats = statSync(builtServer);
-    console.log(`Startup: Found root compiled server at ${builtServer} (${stats.size} bytes)`);
+    console.log(`Startup: Found Master Bundle at ${builtServer} (${stats.size} bytes)`);
     
     if (stats.size < 1000) {
         console.warn('WARNING: server_compiled.js seems too small. Build might have failed.');

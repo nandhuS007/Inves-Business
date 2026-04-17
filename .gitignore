@@ -3,8 +3,8 @@ build/
 # Production Build Outputs
 built_site/
 !built_site/
-server_compiled.js
-!server_compiled.js
+master_server.js
+!master_server.js
 coverage/
 .DS_Store
 *.log
