@@ -6,28 +6,18 @@ import { existsSync, readdirSync, statSync } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-console.log('--- Hostinger Production Bridge (V13 - Master Bundle) ---');
+console.log('--- Hostinger Production Bridge (V14 - Fixed Imports) ---');
 const builtServer = join(__dirname, 'master_server.js');
 
 if (existsSync(builtServer)) {
     const stats = statSync(builtServer);
     console.log(`Startup: Found Master Bundle at ${builtServer} (${stats.size} bytes)`);
     
-    if (stats.size < 1000) {
-        console.warn('WARNING: server_compiled.js seems too small. Build might have failed.');
-    }
-
+    // Using inherit to ensure all output (including module errors) goes to the main process
     const child = spawn(process.execPath, [builtServer], {
         cwd: __dirname,
+        stdio: 'inherit',
         env: { ...process.env, NODE_ENV: 'production' }
-    });
-
-    child.stdout.on('data', (data) => {
-        process.stdout.write(`[SERVER-OUT]: ${data}`);
-    });
-
-    child.stderr.on('data', (data) => {
-        process.stdout.write(`[SERVER-ERR]: ${data}`);
     });
 
     child.on('error', (err) => {
