@@ -1,6 +1,6 @@
 node_modules/
 build/
-dist/
+# dist/ - Removed from ignore for direct deployment
 coverage/
 .DS_Store
 *.log
